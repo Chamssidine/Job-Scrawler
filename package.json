@@ -1,0 +1,21 @@
+{
+  "name": "intl-job-agent",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "type": "module",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "cheerio": "^1.1.0",
+    "dotenv": "^17.2.3",
+    "openai": "^6.15.0",
+    "pdf-parse": "^2.2.2",
+    "puppeteer": "^24.34.0"
+  }
+}
