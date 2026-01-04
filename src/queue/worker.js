@@ -2,7 +2,7 @@ import { Worker } from 'bullmq';
 import { connection, crawlQueue } from './setup.js';
 import { crawlPage } from '../crawler/crawlPage.js';
 import { agentStep } from '../agent/orchestrator.js';
-import computeScore from './scoring.js';
+import computeScore from '../core/scoring.js';
 import { SYSTEM_PROMPT } from '../agent/prompt.js';
 
 const worker = new Worker('job-crawler', async (job) => {

@@ -1,66 +1,39 @@
 [
   {
-    "extracted_at": "2026-01-04T14:39:10.932Z"
+    "title": "Freiwilligendienst im Bereich der Altenpflege und Kindertagesstätte",
+    "organization": "DRK Soziale Dienste Meschede gGmbH",
+    "location": "Meschede",
+    "email": "einrichtungsleitung@drk-meschede.de",
+    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/927",
+    "description": "Engagement dans le domaine de l'aide aux personnes âgées et dans une garderie pour enfants.",
+    "extracted_at": "2026-01-04T16:23:53.632Z"
   },
   {
-    "extracted_at": "2026-01-04T14:39:16.377Z"
-  },
-  {
-    "extracted_at": "2026-01-04T14:39:22.401Z"
-  },
-  {
-    "extracted_at": "2026-01-04T14:39:28.226Z"
-  },
-  {
-    "extracted_at": "2026-01-04T14:39:33.746Z"
-  },
-  {
-    "extracted_at": "2026-01-04T14:39:39.477Z"
-  },
-  {
-    "title": "Archehof",
-    "organization": "ASB - Kinder und Jugendhilfe",
+    "title": "FSJ dans une Wohngruppe \"Archehof\"",
+    "organization": "Archehof",
     "location": "Kröpelin",
     "email": "bfd@asb-kjh.de",
     "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/22160",
-    "description": "Wohngruppe offrant un cadre idyllique pour enfants et jeunes familles, incluant contact avec les animaux.",
-    "extracted_at": "2026-01-04T14:43:12.878Z"
+    "description": "La Wohngruppe \"Archehof\" offre un soutien aux enfants, adolescents et jeunes familles dans un cadre paisible proche de la mer, en mettant l'accent sur la connexion avec les animaux.",
+    "extracted_at": "2026-01-04T16:23:54.459Z"
   },
   {
-    "title": "Freiwilligendienst bei Arpegio Hildesheim e.V.",
+    "title": "Freiwilligendienst bei Arpegio Hildesheim",
     "organization": "Arpegio Hildesheim e.V.",
-    "location": "Hildesheim",
+    "location": "Hildesheim, 31134",
     "email": "info@arpegio-hildesheim.de",
     "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/29694",
-    "description": "Engagement dans un projet social de musique interculturelle en soutenant les enfants dans leur apprentissage d'un instrument.",
-    "extracted_at": "2026-01-04T14:43:19.737Z"
+    "description": "Engagement dans un projet musical interculturel pour soutenir les enfants dans l'apprentissage de leur instrument.",
+    "extracted_at": "2026-01-04T16:23:54.477Z"
   },
   {
-    "title": "BFD im Haus- und Werkbereich",
-    "organization": "Bauckhof Stütensen e.V.",
-    "location": "Rosche",
-    "email": "p.mazzetti@bauckhof-stuetensen.de",
-    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/2996",
-    "description": "Le Bauckhof Stütensen est une établissement social-thérapeutique qui offre de l'aide à des personnes avec des besoins d'assistance. Les volontaires assistent les adultes dans leurs tâches quotidiennes, y compris des activités de soins.",
-    "extracted_at": "2026-01-04T14:43:31.935Z"
-  },
-  {
-    "title": "Freiwilligendienst im Bereich der stationären Altenpflege, der Tagespflege sowie in der Kindertagesstätte",
-    "organization": "DRK Soziale Dienste Meschede gGmbH",
-    "location": "Meschede, 59872",
-    "email": "einrichtungsleitung@drk-meschede.de",
-    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/927",
-    "description": "Le DRK Soziale Dienste Meschede gGmbH propose un service auprès des personnes âgées et des jeunes enfants, cherchant des volontaires pour la garde d'enfants et l'aide des seniors.",
-    "extracted_at": "2026-01-04T14:43:45.039Z"
-  },
-  {
-    "title": "Einsatzstelle 'Chemnitzer Gewölbegänge'",
+    "title": "Chemnitzer Gewölbegänge",
     "organization": "Chemnitzer Gewölbegänge",
     "location": "Chemnitz",
     "email": "info@chemnitzer-gewoelbegaenge.de",
     "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/22679",
-    "description": "Le Verein 'Chemnitzer Gewölbegänge' a pour mission de préserver et de développer des passages souterrains historiques pour le tourisme et la culture. Ils organisent des visites et des événements éducatifs.",
-    "extracted_at": "2026-01-04T14:43:51.999Z"
+    "description": "Le Verein \"Chemnitzer Gewölbegänge\" s'occupe de la préservation des anciennes caves de Chemnitz et offre des visites guidées, des événements culturels, ainsi qu'un service de location de vélos.",
+    "extracted_at": "2026-01-04T16:23:54.526Z"
   },
   {
     "title": "FSJ dans la CreativWerkstatt-Die Jugendkunstschule",
@@ -68,34 +41,79 @@
     "location": "Herten",
     "email": "creativwerkstatt@herten.de",
     "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/5142",
-    "description": "Le Bundesfreiwilligendienst dans la CreativWerkstatt propose aux volontaires de participer à des activités créatives avec les enfants et les jeunes, incluant des cours de bois, graffiti, et des ateliers scientifiques. Les tâches incluent la préparation d'actions créatives, le soutien aux enseignants, la gestion des inscriptions, et la gestion des réseaux sociaux.",
-    "extracted_at": "2026-01-04T14:43:59.772Z"
+    "description": "Le Bundesfreiwilligendienst dans la CreativWerkstatt consiste à travailler avec des enfants et des jeunes à travers divers cours et ateliers créatifs.",
+    "extracted_at": "2026-01-04T16:23:59.276Z"
   },
   {
-    "title": "Hilfe für Menschen mit Beeinträchtigungen",
-    "organization": "Das Boot Verein zur Förderung der psychischen Gesundheit",
+    "title": "BFD im Bauckhof Stütensen",
+    "organization": "Bauckhof Stütensen e.V.",
+    "location": "Rosche",
+    "email": "p.mazzetti[at]bauckhof-stuetensen.de",
+    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/2996",
+    "description": "Le Bauckhof Stütensen est une institution socio-thérapeutique qui aide les personnes ayant des besoins d'assistance et les intègre dans diverses activités. Les volontaires accompagnent les adultes dans des tâches ménagères et pratiques, ainsi que lors de leurs activités quotidiennes.",
+    "extracted_at": "2026-01-04T16:23:59.701Z"
+  },
+  {
+    "title": "BFD im Verein zur Förderung der psychischen Gesundheit",
+    "organization": "Das Boot",
     "location": "Emden",
     "email": "bewerbung@das-boot-emden.de",
     "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/16235",
-    "description": "Le Verein „Das Boot“ zur Förderung seelischer Gesundheit e.V. est engagé depuis plus de 40 ans dans le soutien aux personnes atteintes de troubles psychiques.",
-    "extracted_at": "2026-01-04T14:44:11.768Z"
+    "description": "Einsatzbereiche: Hilfe für Menschen mit Beeinträchtigungen, Integration. Unterstützung für Menschen in la maison spéciale (Wohngruppen) et plusieurs autres domaines.",
+    "extracted_at": "2026-01-04T16:24:00.841Z"
   },
   {
-    "title": "Freiwilligendienst im 'eastside' Club",
-    "organization": "'eastside' Club",
+    "title": "FSJ au 'eastside' Club",
+    "organization": "eastside Club",
     "location": "Berlin",
     "email": "c.friese@juli-berlin.org",
     "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/25444",
-    "description": "Engagement dans le domaine de la jeunesse, soutenant les enfants et adolescents de 8 à 18 ans avec diverses activités.",
-    "extracted_at": "2026-01-04T14:45:06.051Z"
+    "description": "Offre dans le cadre de la Kinder- und Jugendhilfe, incluant la participation à des activités éducatives et de loisirs pour les jeunes.",
+    "extracted_at": "2026-01-04T16:24:05.339Z"
   },
   {
-    "title": "Erinnerungsort Badehaus",
+    "title": "FSJ au 'Erinnerungsort Badehaus'",
     "organization": "Erinnerungsort Badehaus",
     "location": "Wolfratshausen",
     "email": "info@erinnerungsort-badehaus.de",
     "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/31641",
-    "description": "Le Erinnerungsort BADEHAUS de Wolfratshausen propose une immersion dans l'histoire avec des thèmes comme la culture, la protection des monuments et l'éducation des adultes.",
-    "extracted_at": "2026-01-04T14:45:20.564Z"
+    "description": "Le projet adresse la culture, la protection des monuments et la formation pour adultes à l'endroit historique qui raconte l'histoire de la région pendant la période nazie.",
+    "extracted_at": "2026-01-04T16:24:10.748Z"
+  },
+  {
+    "title": "Einsatzplatz im Museumsbetrieb",
+    "organization": "Erinnerungsort Badehaus",
+    "location": "Wolfratshausen",
+    "email": "info@erinnerungsort-badehaus.de",
+    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/platzangebot-suchen/387",
+    "description": "Unsere Bundesfreiwilligen unterstützen uns im täglichen Museumsbetrieb, bei Veranstaltungen, in der Verwaltung et au marketing.",
+    "extracted_at": "2026-01-04T16:24:27.851Z"
+  },
+  {
+    "title": "FSJ au Kindergarten Sonne, Mond und Sterne",
+    "organization": "Kindergarten Sonne, Mond und Sterne",
+    "location": "Baindt, 88255",
+    "email": "s.flintrop@baindt.de",
+    "url": "https://freiwillig-ja.de/stellenangebote/476970/baindt-kindergarten-sonne-mond-und-sterne",
+    "description": "Freiwilliges Soziales Jahr dans un jardin d'enfants.",
+    "extracted_at": "2026-01-04T16:42:50.054Z"
+  },
+  {
+    "title": "Bundesfreiwilligendienst im Tierpark",
+    "organization": "Tierpark Geithain e.V.",
+    "location": "Geithain",
+    "email": "info@tierpark-geithain.de",
+    "url": "https://freiwillig-ja.de/stellenangebote/492915/bundesfreiwilligendienst-im-tierpark",
+    "description": "Unterstützung bei der täglichen Versorgung der Tiere in unserem Haustierpark, Fütterung, Pflege und Sauberhaltung der Gehege.",
+    "extracted_at": "2026-01-04T16:43:08.662Z"
+  },
+  {
+    "title": "FSJ Kraft im Kindergarten",
+    "organization": "Kindergarten St. Theresia",
+    "location": "Ettlingen, 76275",
+    "email": "st.theresia@mafv-kiga-ettlingen.de",
+    "url": "https://freiwillig-ja.de/stellenangebote/976508/kindergarten-st-theresia",
+    "description": "Accompagnement d'enfants dans un kindergarten, dont une enfant avec des besoins particuliers.",
+    "extracted_at": "2026-01-04T16:43:45.686Z"
   }
 ]
