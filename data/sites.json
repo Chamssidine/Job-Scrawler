@@ -1,11 +1,50 @@
 [
   {
-    "name": "FSJ",
-    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/"
-  
-  },  {
-    "name": "FSJ || BFD ",
-    "url": "https://freiwillig-ja.de/stellensuche?ort%5Bsource_configuration%5D%5Borigin_address%5D=&ort%5Bvalue%5D=10&taetigkeiten%5B13%5D=13&taetigkeiten%5B8%5D=8&taetigkeiten%5B12%5D=12&taetigkeiten%5B48%5D=48&taetigkeiten%5B49%5D=49&taetigkeiten%5B52%5D=52&fuehrerschein=All&unterkunft=All"
+    "name": "Jugendfreiwilligendienste (youth voluntary services)",
+    "description": "Portail officiel d’information sur les services volontaires jeunesse (FSJ, FÖJ, IJFD) avec FAQ et procédures de candidature.",
+    "url": "https://www.jugendfreiwilligendienste.de/jugendfreiwilligendienste/meta/jugendfreiwilligendienste-en",
+    "type": "information & offres"
+  },
+  {
+    "name": "freiwillig-ja.de - Service volontaire en Allemagne",
+    "description": "Site d’informations général sur les opportunités de service volontaire (FSJ, FÖJ) et sur les organismes (‘Träger’) qui accompagnent les placements.",
+    "url": "https://freiwillig-ja.de/service-volontaire-en-allemagne",
+    "type": "information & contacts"
+  },
+  {
+    "name": "foej.de – Dachverband der FÖJ-Träger",
+    "description": "Portail central des associations offrant des placements FÖJ en Allemagne ; liste de Träger (organismes coordinateurs) des offres FÖJ.",
+    "url": "https://foej.de/traeger",
+    "type": "offres & liste de Träger"
+  },
+  {
+    "name": "pro-fsj.de – Bundesarbeitskreis FSJ",
+    "description": "Site de la fédération FSJ en Allemagne, avec informations et liens vers des organisations qui offrent des placements FSJ.",
+    "url": "https://www.pro-fsj.de",
+    "type": "offres & informations"
+  },
+  {
+    "name": "oeko-jobs.de – FÖJ et emploi écologique",
+    "description": "Base de données allemande d’offres dans le secteur écologique, incluant les placements FÖJ.",
+    "url": "https://www.oeko-jobs.de",
+    "type": "offres écologiques (FÖJ)"
+  },
+  {
+    "name": "jobmada.mg",
+    "description": "Plateforme d’emploi à Madagascar où des offres généralistes peuvent parfois inclure des opportunités de volontariat ou stages similaires (non exclusivement FSJ/FÖJ).",
+    "url": "https://www.jobmada.mg",
+    "type": "job board général"
+  },
+  {
+    "name": "madajob.mg",
+    "description": "Agence RH / job board à Madagascar pour offres d’emploi et opportunités de carrière.",
+    "url": "https://www.madajob.mg",
+    "type": "job board général"
+  },
+  {
+    "name": "malagasy-de.com – Offres FSJ/BFD",
+    "description": "Site proposant des informations et certaines offres de FSJ (Freiwilliges Soziales Jahr) et BFD.",
+    "url": "https://malagasy-de.com/madagascar/offre",
+    "type": "offres FSJ/BFD"
   }
- 
 ]
