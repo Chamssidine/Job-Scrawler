@@ -1,4 +1,3 @@
-
 import fs from "fs/promises";
 import express from 'express';
 import 'dotenv/config';
@@ -15,13 +14,21 @@ const SITES_CONFIG_PATH = "./data/sites.json"; // Fichier de config des sites
 // --- Helpers ---
 const readJsonFile = async (path, defaultData = []) => {
     try {
-        const data = await fs.readFile(path, 'utf-8');
-        return JSON.parse(data);
+        const fileContent = await fs.readFile(path, 'utf-8');
+        // Retire les commentaires pour permettre un parsing JSON valide
+        const cleanedContent = fileContent.replace(/\/\/.*$|\/\*[\s\S]*?\*\//gm, '');
+        if (cleanedContent.trim() === '') return defaultData;
+        return JSON.parse(cleanedContent);
     } catch (error) {
         if (error.code === 'ENOENT') {
+            // Le fichier n'existe pas, on le crée avec les données par défaut
+            await fs.writeFile(path, JSON.stringify(defaultData, null, 2));
             return defaultData;
         }
-        throw error;
+        // Gérer les autres erreurs (ex: JSON malformé)
+        console.error(`Erreur critique lors de la lecture ou du parsing de ${path}:`, error);
+        // On retourne les données par défaut pour éviter un crash
+        return defaultData;
     }
 };
 
@@ -67,22 +74,27 @@ app.post('/api/scan', async (req, res) => {
 
     // Sauvegarder la configuration si demandé
     if (saveConfig) {
-        const sites = await readJsonFile(SITES_CONFIG_PATH, []);
-        const existingIndex = sites.findIndex(s => s.name === name);
-        const newSite = { name, url, schema: schema || null };
+        try {
+            const sites = await readJsonFile(SITES_CONFIG_PATH, []);
+            const existingIndex = sites.findIndex(s => s.name === name);
+            const newSite = { name, url, schema: schema || null };
 
-        if (existingIndex !== -1) {
-            sites[existingIndex] = newSite; // Mettre à jour
-        } else {
-            sites.push(newSite); // Ajouter
+            if (existingIndex !== -1) {
+                sites[existingIndex] = newSite; // Mettre à jour
+            } else {
+                sites.push(newSite); // Ajouter
+            }
+            await fs.writeFile(SITES_CONFIG_PATH, JSON.stringify(sites, null, 2));
+        } catch(err) {
+            console.error("Erreur lors de la sauvegarde de la configuration:", err);
+            return res.status(500).json({ message: "Impossible de sauvegarder la configuration." });
         }
-        await fs.writeFile(SITES_CONFIG_PATH, JSON.stringify(sites, null, 2));
     }
 
     // Ajouter le job à la file d'attente
     try {
         const safeJobId = `scan:${name.replace(/[^a-zA-Z0-9]/g, '-')}:${Date.now()}`;
-        await crawlQueue.add('crawl-job', { // Renommé pour plus de clarté
+        await crawlQueue.add('crawl-job', { 
             url, 
             source: name, 
             schema: schema || null,
@@ -109,16 +121,21 @@ app.delete('/api/sites', async (req, res) => {
     if (!name) {
         return res.status(400).json({ message: "Le nom de la configuration est requis." });
     }
+    
+    try {
+        const sites = await readJsonFile(SITES_CONFIG_PATH, []);
+        const filteredSites = sites.filter(s => s.name !== name);
 
-    const sites = await readJsonFile(SITES_CONFIG_PATH, []);
-    const filteredSites = sites.filter(s => s.name !== name);
+        if (sites.length === filteredSites.length) {
+            return res.status(404).json({ message: "Configuration non trouvée." });
+        }
 
-    if (sites.length === filteredSites.length) {
-        return res.status(404).json({ message: "Configuration non trouvée." });
+        await fs.writeFile(SITES_CONFIG_PATH, JSON.stringify(filteredSites, null, 2));
+        res.status(200).json({ message: `Configuration '${name}' supprimée.` });
+    } catch (err) {
+        console.error("Erreur lors de la suppression de la configuration:", err);
+        res.status(500).json({ message: "Impossible de supprimer la configuration." });
     }
-
-    await fs.writeFile(SITES_CONFIG_PATH, JSON.stringify(filteredSites, null, 2));
-    res.status(200).json({ message: `Configuration '${name}' supprimée.` });
 });
 
 
@@ -164,7 +181,12 @@ app.listen(PORT, () => {
     console.log(`📊 Dashboard BullMQ disponible sur http://localhost:${PORT}/admin/queues`);
 });
 
-// --- Lancement des scans au démarrage ---
+// --- Lancement des scans au démarrage (deprecated) ---
+// La logique de lancement au démarrage est temporairement désactivée pour 
+// éviter des scans non désirés à chaque redémarrage. 
+// L'utilisateur peut lancer les scans manuellement depuis l'interface.
+
+/*
 async function startInitialDiscovery() {
     try {
         const sites = await readJsonFile(SITES_CONFIG_PATH, []);
@@ -187,3 +209,4 @@ async function startInitialDiscovery() {
 }
 
 startInitialDiscovery();
+*/

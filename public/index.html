@@ -222,7 +222,7 @@
             } else if (e.target.closest('.edit-config-btn')) {
                 populateForm(config);
             } else if (e.target.closest('.delete-config-btn')) {
-                if (!confirm(`Voulez-vous vraiment supprimer la configuration "${config.name}" ?`)) return;
+                if (!confirm(`Voulez-vous vraiment supprimer la configuration \"${config.name}\" ?`)) return;
                 try {
                     const res = await fetch('/api/sites', {
                         method: 'DELETE',
@@ -230,7 +230,7 @@
                         body: JSON.stringify({ name: config.name })
                     });
                     if (!res.ok) throw new Error((await res.json()).message);
-                    showStatus(`✅ Configuration "${config.name}" supprimée`, "text-green-400");
+                    showStatus(`✅ Configuration \"${config.name}\" supprimée`, "text-green-400");
                     fetchSites();
                 } catch (err) {
                     showStatus(`❌ ${err.message}`, "text-red-400");
@@ -290,7 +290,7 @@
             try {
                 const res = await fetch(`/api/results`);
                 let data = await res.json();
-                data.sort((a, b) => new Date(b.extractedAt) - new Date(a.extractedAt));
+                data.sort((a, b) => new Date(b.extracted_at) - new Date(a.extracted_at));
                 
                 if (JSON.stringify(allResults) !== JSON.stringify(data)) {
                     allResults = data;
@@ -318,7 +318,7 @@
                 const card = document.createElement('div');
                 card.className = "job-card glass-panel p-4 rounded-lg border border-transparent hover:border-primary/50 transition-all duration-300";
                 
-                const { url, email, extractedAt, ...displayData } = item;
+                const { url, email, extracted_at, ...displayData } = item;
                 const titleKey = Object.keys(displayData).find(k => k.toLowerCase().includes('title') || k.toLowerCase().includes('name')) || Object.keys(displayData)[0];
                 const title = displayData[titleKey] || 'Résultat sans titre';
 
@@ -338,7 +338,7 @@
                         </div>
                     </div>
                     <div class="text-right text-xs text-gray-600 font-mono mt-3 pt-3 border-t border-gray-700/50">
-                        ${new Date(extractedAt || Date.now()).toLocaleString('fr-FR')}
+                        ${new Date(item.extracted_at || Date.now()).toLocaleString('fr-FR')}
                     </div>
                 `;
                 container.appendChild(card);
@@ -349,7 +349,7 @@
         function updateStats(data) {
             document.getElementById('countTotal').textContent = data.length;
             if (data.length > 0) {
-                const date = new Date(data[0].extractedAt);
+                const date = new Date(data[0].extracted_at);
                 document.getElementById('lastScanTime').textContent = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 exportBtn.classList.remove('opacity-50', 'pointer-events-none');
             } else {
