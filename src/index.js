@@ -9,27 +9,30 @@ import './queue/worker.js';
 // --- Configuration ---
 const PORT = process.env.PORT || 3000;
 const RESULTS_PATH = "./data/results.json";
-const SITES_CONFIG_PATH = "./data/sites.json"; // Fichier de config des sites
+const SITES_CONFIG_PATH = "./data/sites.json";
 
 // --- Helpers ---
 const readJsonFile = async (path, defaultData = []) => {
     try {
         const fileContent = await fs.readFile(path, 'utf-8');
-        // Retire les commentaires pour permettre un parsing JSON valide
         const cleanedContent = fileContent.replace(/\/\/.*$|\/\*[\s\S]*?\*\//gm, '');
         if (cleanedContent.trim() === '') return defaultData;
         return JSON.parse(cleanedContent);
     } catch (error) {
         if (error.code === 'ENOENT') {
-            // Le fichier n'existe pas, on le crée avec les données par défaut
             await fs.writeFile(path, JSON.stringify(defaultData, null, 2));
             return defaultData;
         }
-        // Gérer les autres erreurs (ex: JSON malformé)
         console.error(`Erreur critique lors de la lecture ou du parsing de ${path}:`, error);
-        // On retourne les données par défaut pour éviter un crash
         return defaultData;
     }
+};
+
+// Helper function to remove control characters from strings
+const sanitizeString = (str) => {
+    if (typeof str !== 'string') return str;
+    // Removes ASCII control characters & other common problematic unicode characters
+    return str.replace(/[\u0000-\u001F\u007F-\u009F]/g, "").trim();
 };
 
 // --- Initialisation de l'application Express ---
@@ -42,7 +45,7 @@ setupBullBoard(app);
 
 // --- API Routes ---
 
-// GET /api/results - Fournir les résultats de scan
+// GET /api/results
 app.get('/api/results', async (req, res) => {
     try {
         const results = await readJsonFile(RESULTS_PATH, []);
@@ -53,7 +56,7 @@ app.get('/api/results', async (req, res) => {
     }
 });
 
-// GET /api/sites - Récupérer les configurations de sites
+// GET /api/sites
 app.get('/api/sites', async (req, res) => {
     try {
         const sites = await readJsonFile(SITES_CONFIG_PATH, []);
@@ -64,25 +67,44 @@ app.get('/api/sites', async (req, res) => {
     }
 });
 
-// POST /api/scan - Lancer un nouveau scan et/ou sauvegarder une config
+// POST /api/scan - Lancer un nouveau scan et/ou sauvegarder une config (AVEC SANITIZATION)
 app.post('/api/scan', async (req, res) => {
     const { url, name, schema, saveConfig } = req.body;
 
-    if (!url || !name) {
+    // --- SANITIZATION ---
+    const sanitizedName = name ? sanitizeString(name) : "";
+    const sanitizedUrl = url ? sanitizeString(url) : "";
+    let sanitizedSchema = null;
+
+    if (schema) {
+        sanitizedSchema = {};
+        for (const key in schema) {
+            const sanitizedKey = sanitizeString(key);
+            const sanitizedValue = sanitizeString(schema[key]);
+            if (sanitizedKey) {
+                sanitizedSchema[sanitizedKey] = sanitizedValue;
+            }
+        }
+        if (Object.keys(sanitizedSchema).length === 0) {
+            sanitizedSchema = null;
+        }
+    }
+    // --- END SANITIZATION ---
+
+    if (!sanitizedUrl || !sanitizedName) {
         return res.status(400).json({ message: "L'URL et le Nom du projet sont requis." });
     }
 
-    // Sauvegarder la configuration si demandé
     if (saveConfig) {
         try {
             const sites = await readJsonFile(SITES_CONFIG_PATH, []);
-            const existingIndex = sites.findIndex(s => s.name === name);
-            const newSite = { name, url, schema: schema || null };
+            const existingIndex = sites.findIndex(s => s.name === sanitizedName);
+            const newSite = { name: sanitizedName, url: sanitizedUrl, schema: sanitizedSchema || null };
 
             if (existingIndex !== -1) {
-                sites[existingIndex] = newSite; // Mettre à jour
+                sites[existingIndex] = newSite;
             } else {
-                sites.push(newSite); // Ajouter
+                sites.push(newSite);
             }
             await fs.writeFile(SITES_CONFIG_PATH, JSON.stringify(sites, null, 2));
         } catch(err) {
@@ -91,13 +113,12 @@ app.post('/api/scan', async (req, res) => {
         }
     }
 
-    // Ajouter le job à la file d'attente
     try {
-        const safeJobId = `scan:${name.replace(/[^a-zA-Z0-9]/g, '-')}:${Date.now()}`;
+        const safeJobId = `scan:${sanitizedName.replace(/[^a-zA-Z0-9]/g, '-')}:${Date.now()}`;
         await crawlQueue.add('crawl-job', { 
-            url, 
-            source: name, 
-            schema: schema || null,
+            url: sanitizedUrl, 
+            source: sanitizedName, 
+            schema: sanitizedSchema || null,
             maxDepth: 2,
             depth: 0,
         }, {
@@ -106,7 +127,7 @@ app.post('/api/scan', async (req, res) => {
             backoff: 5000
         });
 
-        console.log(`✅ Nouveau scan ajouté pour : ${name} (${url})`);
+        console.log(`✅ Nouveau scan ajouté pour : ${sanitizedName} (${sanitizedUrl})`);
         res.status(202).json({ message: "Scan ajouté à la file d'attente." });
 
     } catch (error) {
@@ -115,7 +136,8 @@ app.post('/api/scan', async (req, res) => {
     }
 });
 
-// DELETE /api/sites - Supprimer une configuration
+
+// DELETE /api/sites
 app.delete('/api/sites', async (req, res) => {
     const { name } = req.body;
     if (!name) {
@@ -139,7 +161,7 @@ app.delete('/api/sites', async (req, res) => {
 });
 
 
-// GET /api/export - Exporter les résultats en CSV
+// GET /api/export
 app.get('/api/export', async (req, res) => {
     try {
         const results = await readJsonFile(RESULTS_PATH, []);
@@ -180,33 +202,3 @@ app.listen(PORT, () => {
     console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
     console.log(`📊 Dashboard BullMQ disponible sur http://localhost:${PORT}/admin/queues`);
 });
-
-// --- Lancement des scans au démarrage (deprecated) ---
-// La logique de lancement au démarrage est temporairement désactivée pour 
-// éviter des scans non désirés à chaque redémarrage. 
-// L'utilisateur peut lancer les scans manuellement depuis l'interface.
-
-/*
-async function startInitialDiscovery() {
-    try {
-        const sites = await readJsonFile(SITES_CONFIG_PATH, []);
-        if (sites.length > 0) {
-            console.log(`🚀 Lancement des scans pour ${sites.length} configurations sauvegardées...`);
-            for (const site of sites) {
-                const safeJobId = `initial:${site.name.replace(/[^a-zA-Z0-9]/g, '-')}:${Date.now()}`;
-                await crawlQueue.add('crawl-job', {
-                    url: site.url,
-                    source: site.name,
-                    schema: site.schema || null,
-                    maxDepth: 2,
-                    depth: 0,
-                }, { jobId: safeJobId });
-            }
-        }
-    } catch (error) {
-        console.error("❌ Erreur lors du lancement des scans initiaux:", error.message);
-    }
-}
-
-startInitialDiscovery();
-*/
