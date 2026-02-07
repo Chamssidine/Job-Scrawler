@@ -4,7 +4,7 @@ import express from 'express';
 import 'dotenv/config';
 
 import { crawlQueue } from './queue/setup.js';
-import setupBullBoard from './queue/dashboard.js'; // Importation corrigée
+import setupBullBoard from './queue/dashboard.js'; 
 import './queue/worker.js';
 
 // --- Configuration ---
@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // --- BullMQ Dashboard ---
-setupBullBoard(app); // Utilisation correcte du module dashboard
+setupBullBoard(app);
 
 // --- API Routes ---
 
@@ -37,7 +37,8 @@ app.get('/api/results', async (req, res) => {
 
 // POST /api/scan - Lancer un nouveau scan
 app.post('/api/scan', async (req, res) => {
-    const { url, name } = req.body;
+    // On récupère url, name et le nouveau champ 'schema'
+    const { url, name, schema } = req.body;
 
     if (!url) {
         return res.status(400).json({ message: "L'URL est requise." });
@@ -51,7 +52,8 @@ app.post('/api/scan', async (req, res) => {
             depth: 0,
             source: name || "scan-manuel",
             maxDepth: 2,
-            schema: null
+            // On transmet le schéma ici. S'il est absent, on passe 'null'.
+            schema: schema || null 
         }, {
             jobId: safeJobId,
             attempts: 3,

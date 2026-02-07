@@ -53,13 +53,18 @@
                     <form id="scanForm" class="space-y-4">
                         <div>
                             <label class="block text-sm text-gray-400 mb-1" for="siteName">Nom du projet</label>
-                            <input type="text" id="siteName" placeholder="Ex: Jobs en France" 
+                            <input type="text" id="siteName" placeholder="Ex: Amazon - T-shirts" 
                                 class="w-full bg-gray-900/50 border border-gray-600 rounded p-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition">
                         </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1" for="siteUrl">URL Cible</label>
                             <input type="url" id="siteUrl" placeholder="https://..." required
                                 class="w-full bg-gray-900/50 border border-gray-600 rounded p-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1" for="schemaInput">Schéma (JSON, optionnel)</label>
+                            <textarea id="schemaInput" placeholder='''{ "produit": "Le nom du produit", "prix": "Le prix de l'''article" }''' rows="4" 
+                                class="w-full bg-gray-900/50 border border-gray-600 rounded p-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition font-mono text-sm"></textarea>
                         </div>
                         <button type="submit" 
                             class="w-full bg-primary hover:bg-primary-hover text-white font-bold py-2.5 px-4 rounded-lg transition-all duration-300 flex justify-center items-center gap-2 shadow-lg hover:shadow-primary/30">
@@ -115,138 +120,309 @@
         // --- GESTION DES EVENEMENTS ---
 
         scanForm.addEventListener('submit', handleScanSubmit);
+
         searchInput.addEventListener('input', () => renderResults(allResults));
+
         
+
         // --- FONCTIONS PRINCIPALES ---
+
         
+
         async function handleScanSubmit(e) {
+
             e.preventDefault();
+
             const url = document.getElementById('siteUrl').value;
+
             const name = document.getElementById('siteName').value;
+
+            const schemaString = document.getElementById('schemaInput').value;
             const btn = e.target.querySelector('button');
+
             
+
+            let schema = null;
+
+            if (schemaString.trim()) {
+
+                try {
+
+                    schema = JSON.parse(schemaString);
+
+                } catch (err) {
+
+                    showStatus("❌ Le schéma JSON est invalide.", "text-red-400");
+
+                    return;
+
+                }
+
+            }
+
+
+
             const originalText = btn.innerHTML;
+
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Traitement...';
+
             btn.disabled = true;
 
+
+
             try {
+
                 const res = await fetch(`/api/scan`, {
+
                     method: 'POST',
+
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, name })
+
+                    body: JSON.stringify({ url, name, schema })
+
                 });
+
                 
+
                 if (res.ok) {
+
                     showStatus("✅ Ajouté à la file d'attente !", "text-green-400");
+
                     scanForm.reset();
+
                 } else {
+
                     const errorData = await res.json();
+
                     throw new Error(errorData.message || 'Erreur serveur');
+
                 }
+
             } catch (err) {
+
                 showStatus(`❌ ${err.message}`, "text-red-400");
+
             } finally {
+
                 setTimeout(() => {
+
                     btn.innerHTML = originalText;
+
                     btn.disabled = false;
+
                     hideStatus();
+
                 }, 2500);
+
             }
+
         }
+
+
 
         async function fetchResults() {
+
             try {
+
                 const res = await fetch(`/api/results`);
+
                 let data = await res.json();
+
                 
+
                 data.sort((a, b) => new Date(b.extracted_at) - new Date(a.extracted_at));
+
                 
+
                 if (JSON.stringify(allResults) !== JSON.stringify(data)) {
+
                     allResults = data;
+
                     updateStats(allResults);
+
                     renderResults(allResults);
+
                 }
+
             } catch (err) {
+
                 console.error("Erreur de récupération des résultats:", err);
+
             }
+
         }
+
+
 
         function renderResults(data) {
+
             const container = document.getElementById('resultsContainer');
+
             const filterText = searchInput.value.toLowerCase();
+
             
+
             const filteredData = data.filter(item => {
+
                 const searchableContent = JSON.stringify(item).toLowerCase();
+
                 return searchableContent.includes(filterText);
+
             });
+
             
+
             container.innerHTML = '';
 
+
+
             if (filteredData.length === 0) {
+
                 container.innerHTML = `<div class="text-center p-10 text-gray-500">
+
                                            <i class="fa-solid fa-ghost text-3xl mb-4"></i>
+
                                            <p>Aucun résultat à afficher.</p>
+
                                        </div>`;
+
                 return;
+
             }
+
+
 
             filteredData.forEach(item => {
+
                 const card = document.createElement('div');
+
                 card.className = "job-card glass-panel p-4 rounded-lg border border-transparent hover:border-primary/50 transition-all duration-300";
+
                 
-                const title = item.title || 'Titre non disponible';
-                const organization = item.organization || 'Organisation non spécifiée';
-                const location = item.location || 'Lieu non spécifié';
-                const description = item.description || '';
-                const url = item.url;
-                const email = item.email;
+
+                const { url, email, extracted_at, ...displayData } = item;
+
+
+
+                let title = 'Résultat';
+
+                let detailsHtml = '';
+
+                
+
+                const keys = Object.keys(displayData);
+
+                if (keys.length > 0) {
+
+                    // Try to find a good title, otherwise use the first key
+
+                    const titleKey = keys.find(k => k.toLowerCase().includes('title') || k.toLowerCase().includes('name') || k.toLowerCase().includes('nom')) || keys[0];
+
+                    title = displayData[titleKey] || 'Titre non disponible';
+
+
+
+                    detailsHtml = Object.entries(displayData)
+
+                        .filter(([key]) => key !== titleKey)
+
+                        .map(([key, value]) => `
+
+                            <div class="text-sm text-gray-400 mt-2">
+
+                                <strong class="text-gray-500 capitalize">${key.replace(/_/g, ' ')}:</strong> ${value || 'N/A'}
+
+                            </div>
+
+                        `).join('');
+
+                }
+
+
 
                 card.innerHTML = `
+
                     <div class="flex flex-col sm:flex-row justify-between sm:items-start gap-3">
+
                         <div class="flex-grow">
+
                             <h3 class="font-bold text-md text-gray-100">${title}</h3>
-                            <p class="text-sm text-gray-400 mt-1">${organization}</p>
-                            <p class="text-xs text-gray-500 mt-2 flex items-center gap-2">
-                                <i class="fa-solid fa-map-marker-alt"></i>
-                                <span>${location}</span>
-                            </p>
+
+                            <div class="mt-2 space-y-1">${detailsHtml}</div>
+
                         </div>
+
                         <div class="flex-shrink-0 flex items-center gap-2 mt-2 sm:mt-0">
+
                             ${email ? `<a href="mailto:${email}" class="h-8 w-8 flex items-center justify-center bg-gray-700/50 hover:bg-gray-600 rounded-full text-gray-300 transition" title="Contacter par email"><i class="fa-solid fa-envelope"></i></a>` : ''}
-                            ${url ? `<a href="${url}" target="_blank" class="h-8 w-8 flex items-center justify-center bg-primary/20 hover:bg-primary/40 rounded-full text-primary transition" title="Voir l'offre"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
+
+                            ${url ? `<a href="${url}" target="_blank" class="h-8 w-8 flex items-center justify-center bg-primary/20 hover:bg-primary/40 rounded-full text-primary transition" title="Voir la source"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
+
                         </div>
+
                     </div>
-                    ${description ? `<p class="text-sm text-gray-400 mt-3 pt-3 border-t border-gray-700/50">${description.substring(0, 150)}${description.length > 150 ? '...' : ''}</p>` : ''}
-                    <div class="text-right text-xs text-gray-600 font-mono mt-3">
-                        ${new Date(item.extracted_at).toLocaleString('fr-FR')}
+
+                    <div class="text-right text-xs text-gray-600 font-mono mt-3 pt-3 border-t border-gray-700/50">
+
+                        ${new Date(extracted_at).toLocaleString('fr-FR')}
+
                     </div>
+
                 `;
+
                 container.appendChild(card);
+
             });
+
         }
+
         
+
         // --- FONCTIONS UTILITAIRES ---
 
+
+
         function updateStats(data) {
+
             document.getElementById('countTotal').textContent = data.length;
+
             if(data.length > 0) {
+
                 const date = new Date(data[0].extracted_at);
+
                 document.getElementById('lastScanTime').textContent = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
             }
+
         }
+
         
+
         function showStatus(message, styleClass) {
+
             statusMsg.textContent = message;
+
             statusMsg.className = `mt-4 text-center text-sm ${styleClass} transition-opacity duration-300 opacity-100`;
+
         }
+
+
 
         function hideStatus() {
+
             statusMsg.className = statusMsg.className.replace('opacity-100', 'opacity-0');
+
         }
 
+
+
         // --- INITIALISATION ---
+
         fetchResults();
-        setInterval(fetchResults, 5000); // Rafraîchissement plus rapide
+
+        setInterval(fetchResults, 5000);
+
+
 
     </script>
 </body>
