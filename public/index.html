@@ -3,169 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Crawler Command Center</title>
+    <title>Crawler Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Scrollbar custom pour look sombre */
+        :root {
+            --color-primary: #3b82f6; /* blue-500 */
+            --color-primary-hover: #2563eb; /* blue-600 */
+        }
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #1f2937; }
-        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        ::-webkit-scrollbar-track { background: #111827; } /* gray-900 */
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; } /* gray-700 */
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; } /* gray-600 */
+
         .glass-panel {
-            background: rgba(31, 41, 55, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(75, 85, 99, 0.4);
+            background: rgba(31, 41, 55, 0.6); /* gray-800/60 */
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(75, 85, 99, 0.5); /* gray-600/50 */
+        }
+        .job-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 font-sans min-h-screen">
+<body class="bg-gray-900 text-gray-200 font-sans antialiased">
 
-    <nav class="border-b border-gray-700 bg-gray-800 p-4 sticky top-0 z-50">
+    <nav class="glass-panel p-4 sticky top-0 z-50 border-b border-gray-700/50">
         <div class="container mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <i class="fa-solid fa-robot text-blue-500 text-2xl"></i>
-                <h1 class="text-xl font-bold tracking-wide">FSJ Crawler <span class="text-blue-500">v2.0</span></h1>
+                <i class="fa-solid fa-spider text-primary text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-wider">Crawler <span class="text-primary">Center</span></h1>
             </div>
-            <div class="flex gap-4">
-                <a href="/admin/queues" target="_blank" class="text-gray-400 hover:text-white transition">
-                    <i class="fa-solid fa-microchip"></i> Moniteur BullMQ
-                </a>
-            </div>
+            <a href="/admin/queues" target="_blank" class="text-gray-400 hover:text-white transition-colors duration-300 flex items-center gap-2 text-sm">
+                <i class="fa-solid fa-chart-bar"></i>
+                <span>Monitoring</span>
+            </a>
         </div>
     </nav>
 
-    <div class="container mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <main class="container mx-auto p-4 md:p-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        <div class="lg:col-span-1 space-y-6">
-            
-            <div class="glass-panel p-6 rounded-xl shadow-lg">
-                <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-bolt text-yellow-400"></i> Lancer un Scan
-                </h2>
-                <form id="scanForm" class="space-y-4">
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-1">Nom (Optionnel)</label>
-                        <input type="text" id="siteName" placeholder="Ex: Croix Rouge Berlin" 
-                            class="w-full bg-gray-800 border border-gray-600 rounded p-2 focus:border-blue-500 focus:outline-none transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-1">URL Cible</label>
-                        <input type="url" id="siteUrl" placeholder="https://..." required
-                            class="w-full bg-gray-800 border border-gray-600 rounded p-2 focus:border-blue-500 focus:outline-none transition">
-                    </div>
-                    <button type="submit" 
-                        class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded transition flex justify-center items-center gap-2">
-                        <i class="fa-solid fa-paper-plane"></i> Injecter dans la file
-                    </button>
-                </form>
-                <div id="statusMsg" class="mt-3 text-center text-sm hidden"></div>
-            </div>
-
-            <div class="glass-panel p-6 rounded-xl shadow-lg">
-                <h2 class="text-lg font-semibold mb-4 text-gray-300">Statistiques Session</h2>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-gray-800 p-3 rounded text-center">
-                        <div class="text-2xl font-bold text-green-400" id="countTotal">0</div>
-                        <div class="text-xs text-gray-500">Offres Trouvées</div>
-                    </div>
-                    <div class="bg-gray-800 p-3 rounded text-center">
-                        <div class="text-2xl font-bold text-blue-400" id="lastScanTime">-</div>
-                        <div class="text-xs text-gray-500">Dernier résultat</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="lg:col-span-2">
-            <div class="glass-panel p-6 rounded-xl shadow-lg h-full">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-lg font-semibold flex items-center gap-2">
-                        <i class="fa-solid fa-list-check text-green-400"></i> Résultats en direct
+            <aside class="lg:col-span-4 xl:col-span-3 space-y-6">
+                <div class="glass-panel p-6 rounded-lg shadow-2xl">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane text-primary"></i> Lancer un Scan
                     </h2>
-                    <button onclick="fetchResults()" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded transition">
-                        <i class="fa-solid fa-rotate"></i> Actualiser
-                    </button>
+                    <form id="scanForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1" for="siteName">Nom du projet</label>
+                            <input type="text" id="siteName" placeholder="Ex: Jobs en France" 
+                                class="w-full bg-gray-900/50 border border-gray-600 rounded p-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1" for="siteUrl">URL Cible</label>
+                            <input type="url" id="siteUrl" placeholder="https://..." required
+                                class="w-full bg-gray-900/50 border border-gray-600 rounded p-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition">
+                        </div>
+                        <button type="submit" 
+                            class="w-full bg-primary hover:bg-primary-hover text-white font-bold py-2.5 px-4 rounded-lg transition-all duration-300 flex justify-center items-center gap-2 shadow-lg hover:shadow-primary/30">
+                            <i class="fa-solid fa-plus-circle"></i> Ajouter à la file
+                        </button>
+                    </form>
+                    <div id="statusMsg" class="mt-4 text-center text-sm" aria-live="polite"></div>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="text-gray-400 border-b border-gray-700 text-sm">
-                                <th class="p-3">Titre & Organisation</th>
-                                <th class="p-3">Lieu</th>
-                                <th class="p-3">Contact</th>
-                                <th class="p-3 text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="resultsTable" class="text-sm">
-                            <tr>
-                                <td colspan="4" class="text-center p-8 text-gray-500">Chargement des données...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="glass-panel p-6 rounded-lg shadow-2xl">
+                    <h2 class="text-lg font-semibold mb-4 text-gray-300">Statistiques</h2>
+                     <div class="space-y-3 text-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Résultats trouvés:</span>
+                            <span class="font-bold text-green-400 text-lg" id="countTotal">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Dernier ajout:</span>
+                            <span class="font-mono text-blue-400" id="lastScanTime">-</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </aside>
+
+            <section class="lg:col-span-8 xl:col-span-9">
+                <div class="glass-panel p-4 sm:p-6 rounded-lg shadow-2xl h-full">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+                        <h2 class="text-lg font-semibold flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-primary"></i> Résultats
+                        </h2>
+                        <div class="relative w-full sm:max-w-xs">
+                             <input type="text" id="searchInput" placeholder="Filtrer les résultats..." class="w-full bg-gray-900/50 border border-gray-600 rounded-full py-2 pl-10 pr-4 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition">
+                             <i class="fa-solid fa-search text-gray-500 absolute left-4 top-1/2 -translate-y-1/2"></i>
+                        </div>
+                    </div>
+
+                    <div id="resultsContainer" class="space-y-4 mt-6 h-[calc(100vh-250px)] overflow-y-auto pr-2">
+                        <!-- Les cartes de résultats seront injectées ici -->
+                    </div>
+                </div>
+            </section>
         </div>
-    </div>
+    </main>
 
     <script>
-        const API_URL = '/api';
+        const API_URL = ''; 
 
-        // 1. Ajouter une URL
-        document.getElementById('scanForm').addEventListener('submit', async (e) => {
+        const scanForm = document.getElementById('scanForm');
+        const statusMsg = document.getElementById('statusMsg');
+        const searchInput = document.getElementById('searchInput');
+        let allResults = [];
+
+        // --- GESTION DES EVENEMENTS ---
+
+        scanForm.addEventListener('submit', handleScanSubmit);
+        searchInput.addEventListener('input', () => renderResults(allResults));
+        
+        // --- FONCTIONS PRINCIPALES ---
+        
+        async function handleScanSubmit(e) {
             e.preventDefault();
             const url = document.getElementById('siteUrl').value;
             const name = document.getElementById('siteName').value;
             const btn = e.target.querySelector('button');
-            const msg = document.getElementById('statusMsg');
-
-            // Animation bouton
+            
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Envoi...';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Traitement...';
             btn.disabled = true;
 
             try {
-                const res = await fetch(`${API_URL}/scan`, {
+                const res = await fetch(`/api/scan`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url, name })
                 });
                 
                 if (res.ok) {
-                    msg.textContent = "✅ Ajouté à la file d'attente !";
-                    msg.className = "mt-3 text-center text-sm text-green-400 block";
-                    document.getElementById('siteUrl').value = '';
+                    showStatus("✅ Ajouté à la file d'attente !", "text-green-400");
+                    scanForm.reset();
                 } else {
-                    throw new Error('Erreur serveur');
+                    const errorData = await res.json();
+                    throw new Error(errorData.message || 'Erreur serveur');
                 }
             } catch (err) {
-                msg.textContent = "❌ Erreur lors de l'ajout.";
-                msg.className = "mt-3 text-center text-sm text-red-400 block";
+                showStatus(`❌ ${err.message}`, "text-red-400");
             } finally {
                 setTimeout(() => {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
-                    msg.classList.add('hidden');
-                }, 2000);
-            }
-        });
-
-        // 2. Récupérer et Afficher les résultats
-        async function fetchResults() {
-            try {
-                const res = await fetch(`${API_URL}/results`);
-                const data = await res.json();
-                
-                // Trier par date d'extraction (le plus récent en haut)
-                data.sort((a, b) => new Date(b.extracted_at) - new Date(a.extracted_at));
-
-                updateStats(data);
-                renderTable(data);
-            } catch (err) {
-                console.error("Erreur fetch results:", err);
+                    hideStatus();
+                }, 2500);
             }
         }
+
+        async function fetchResults() {
+            try {
+                const res = await fetch(`/api/results`);
+                let data = await res.json();
+                
+                data.sort((a, b) => new Date(b.extracted_at) - new Date(a.extracted_at));
+                
+                if (JSON.stringify(allResults) !== JSON.stringify(data)) {
+                    allResults = data;
+                    updateStats(allResults);
+                    renderResults(allResults);
+                }
+            } catch (err) {
+                console.error("Erreur de récupération des résultats:", err);
+            }
+        }
+
+        function renderResults(data) {
+            const container = document.getElementById('resultsContainer');
+            const filterText = searchInput.value.toLowerCase();
+            
+            const filteredData = data.filter(item => {
+                const searchableContent = JSON.stringify(item).toLowerCase();
+                return searchableContent.includes(filterText);
+            });
+            
+            container.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                container.innerHTML = `<div class="text-center p-10 text-gray-500">
+                                           <i class="fa-solid fa-ghost text-3xl mb-4"></i>
+                                           <p>Aucun résultat à afficher.</p>
+                                       </div>`;
+                return;
+            }
+
+            filteredData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "job-card glass-panel p-4 rounded-lg border border-transparent hover:border-primary/50 transition-all duration-300";
+                
+                const title = item.title || 'Titre non disponible';
+                const organization = item.organization || 'Organisation non spécifiée';
+                const location = item.location || 'Lieu non spécifié';
+                const description = item.description || '';
+                const url = item.url;
+                const email = item.email;
+
+                card.innerHTML = `
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-start gap-3">
+                        <div class="flex-grow">
+                            <h3 class="font-bold text-md text-gray-100">${title}</h3>
+                            <p class="text-sm text-gray-400 mt-1">${organization}</p>
+                            <p class="text-xs text-gray-500 mt-2 flex items-center gap-2">
+                                <i class="fa-solid fa-map-marker-alt"></i>
+                                <span>${location}</span>
+                            </p>
+                        </div>
+                        <div class="flex-shrink-0 flex items-center gap-2 mt-2 sm:mt-0">
+                            ${email ? `<a href="mailto:${email}" class="h-8 w-8 flex items-center justify-center bg-gray-700/50 hover:bg-gray-600 rounded-full text-gray-300 transition" title="Contacter par email"><i class="fa-solid fa-envelope"></i></a>` : ''}
+                            ${url ? `<a href="${url}" target="_blank" class="h-8 w-8 flex items-center justify-center bg-primary/20 hover:bg-primary/40 rounded-full text-primary transition" title="Voir l'offre"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
+                        </div>
+                    </div>
+                    ${description ? `<p class="text-sm text-gray-400 mt-3 pt-3 border-t border-gray-700/50">${description.substring(0, 150)}${description.length > 150 ? '...' : ''}</p>` : ''}
+                    <div class="text-right text-xs text-gray-600 font-mono mt-3">
+                        ${new Date(item.extracted_at).toLocaleString('fr-FR')}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        // --- FONCTIONS UTILITAIRES ---
 
         function updateStats(data) {
             document.getElementById('countTotal').textContent = data.length;
@@ -174,80 +234,19 @@
                 document.getElementById('lastScanTime').textContent = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             }
         }
-
-function renderTable(data) {
-    const thead = document.querySelector('thead tr');
-    const tbody = document.getElementById('resultsTable');
-    tbody.innerHTML = '';
-    thead.innerHTML = ''; // On vide les en-têtes fixes
-
-    if (data.length === 0) {
-        tbody.innerHTML = `<tr><td class="text-center p-8 text-gray-500">Aucune donnée.</td></tr>`;
-        return;
-    }
-
-    // 1. Détecter toutes les clés uniques possibles dans les données (sauf les clés techniques)
-    const allKeys = new Set();
-    data.forEach(item => {
-        Object.keys(item).forEach(key => {
-            if (key !== 'extracted_at' && key !== 'source' && key !== '_type') {
-                allKeys.add(key);
-            }
-        });
-    });
-    
-    // Convertir en tableau pour l'ordre
-    const columns = Array.from(allKeys);
-
-    // 2. Générer les En-têtes (Headers) dynamiquement
-    columns.forEach(col => {
-        const th = document.createElement('th');
-        th.className = "p-3 capitalize text-gray-300";
-        th.textContent = col.replace(/_/g, ' '); // ex: product_name -> product name
-        thead.appendChild(th);
-    });
-    // Ajouter une colonne date à la fin
-    const thDate = document.createElement('th');
-    thDate.className = "p-3 text-right";
-    thDate.textContent = "Date";
-    thead.appendChild(thDate);
-
-
-    // 3. Générer les Lignes (Rows)
-    data.forEach(item => {
-        const row = document.createElement('tr');
-        row.className = "border-b border-gray-800 hover:bg-gray-800/50 transition";
         
-        let rowHtml = '';
-        
-        columns.forEach(col => {
-            let val = item[col] || '-';
-            
-            // Si c'est une URL ou une Image, on formate joliment
-            if (typeof val === 'string' && val.startsWith('http')) {
-                // Est-ce une image ?
-                if (val.match(/\.(jpeg|jpg|gif|png)$/) != null) {
-                    val = `<img src="${val}" class="h-10 w-10 rounded object-cover border border-gray-700">`;
-                } else {
-                    val = `<a href="${val}" target="_blank" class="text-blue-400 hover:text-blue-300"><i class="fa-solid fa-link"></i> Lien</a>`;
-                }
-            }
-            
-            rowHtml += `<td class="p-3 text-gray-300 text-sm">${val}</td>`;
-        });
+        function showStatus(message, styleClass) {
+            statusMsg.textContent = message;
+            statusMsg.className = `mt-4 text-center text-sm ${styleClass} transition-opacity duration-300 opacity-100`;
+        }
 
-        // Date
-        const date = new Date(item.extracted_at).toLocaleTimeString();
-        rowHtml += `<td class="p-3 text-right text-xs text-gray-500">${date}</td>`;
+        function hideStatus() {
+            statusMsg.className = statusMsg.className.replace('opacity-100', 'opacity-0');
+        }
 
-        row.innerHTML = rowHtml;
-        tbody.appendChild(row);
-    });
-}
-
-        // Auto-refresh toutes les 10 secondes
+        // --- INITIALISATION ---
         fetchResults();
-        setInterval(fetchResults, 10000);
+        setInterval(fetchResults, 5000); // Rafraîchissement plus rapide
 
     </script>
 </body>
