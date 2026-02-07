@@ -14,6 +14,7 @@ export async function crawlPage(url) {
   }
 
   let finalData = null;
+  let browser = null; // Déclarer le navigateur ici pour pouvoir le fermer en cas d'erreur
 
   /* =====================
      1️⃣ Tentative Axios (Rapide)
@@ -22,15 +23,15 @@ export async function crawlPage(url) {
     const res = await axios.get(url, {
       timeout: 30000,
       headers: {
-        "User-Agent": "IntlJobAgent/1.0 (research)",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9,fr;q=0.8",
       }
     });
 
     const $ = cheerio.load(res.data);
-    const signals = extractSignals($, url); // Utilise déjà la nouvelle regex
+    const signals = extractSignals($, url);
 
-    // Si on a déjà des emails, on gagne du temps
     if (signals.emails.length > 0 && signals.text.length > 400 && !signals.hasForm) {
       finalData = {
         url,
@@ -49,20 +50,24 @@ export async function crawlPage(url) {
      ===================== */
   if (!finalData) {
     try {
-      const browser = await puppeteer.launch({
+      browser = await puppeteer.launch({
         headless: "new",
         args: ["--no-sandbox", "--disable-setuid-sandbox"]
       });
       const page = await browser.newPage();
+
+      // --- DÉGUISENENT DU ROBOT ---
+      await page.setUserAgent(
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
+      );
+      // --------------------------
+
       await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
       
       finalData = await page.evaluate(() => {
-        // Nouvelle regex incluse ici pour Puppeteer
         const EMAIL_REGEX = /[A-Z0-9._%+-]+(?:\s?\[at\]\s?|\s?\(at\)\s?|@)[A-Z0-9.-]+\.[A-Z]{2,}/gi;
-        
         const text = document.body.innerText || "";
         
-        // Extraction et Normalisation immédiate dans le navigateur
         const rawEmails = text.match(EMAIL_REGEX) || [];
         const emails = [...new Set(rawEmails.map(e => 
           e.replace(/\[at\]|\(at\)/gi, "@").replace(/\s/g, "").toLowerCase()
@@ -81,8 +86,11 @@ export async function crawlPage(url) {
       });
 
       await browser.close();
+      browser = null; // Réinitialiser après fermeture réussie
+
     } catch (err) {
       console.error(`Erreur critique Puppeteer sur ${url}:`, err.message);
+      if (browser) await browser.close(); // S'assurer de fermer le navigateur même en cas d'erreur
       return null;
     }
   }
