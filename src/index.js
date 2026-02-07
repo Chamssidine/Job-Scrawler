@@ -8,11 +8,10 @@ import './queue/worker.js';
 runDashboard();
 
 async function startDiscovery(sitesData) {
-  console.log(`🚀 Injection de ${sitesData.length} URLs...`);
+  console.log(`🚀 Injection de ${sitesData.length} configs...`);
   
   const jobs = sitesData.map(site => {
-    
-    const safeJobId = site.url.replace(/:/g, '-');
+    const safeJobId = site.url.replace(/[^a-zA-Z0-9]/g, '-');
 
     return {
       name: 'crawl-link',
@@ -20,19 +19,16 @@ async function startDiscovery(sitesData) {
         url: site.url, 
         depth: 0, 
         source: site.name || "unknown", 
-        maxDepth: 2 
+        maxDepth: 2,
+        schema: site.schema || null // <--- On injecte la config ici
       },
       opts: {
-        jobId: safeJobId,  
+        jobId: safeJobId + Date.now(),  
         attempts: 3,
         backoff: 5000  
       }
     };
-  });
-
-  await crawlQueue.addBulk(jobs);
-  console.log("✅ Toutes les URLs sont dans Redis.");
-}
+  });}
 const sites = JSON.parse(fs.readFileSync("./data/sites.json"));
 startDiscovery(sites);
 

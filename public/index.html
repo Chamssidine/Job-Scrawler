@@ -175,44 +175,75 @@
             }
         }
 
-        function renderTable(data) {
-            const tbody = document.getElementById('resultsTable');
-            tbody.innerHTML = '';
+function renderTable(data) {
+    const thead = document.querySelector('thead tr');
+    const tbody = document.getElementById('resultsTable');
+    tbody.innerHTML = '';
+    thead.innerHTML = ''; // On vide les en-têtes fixes
 
-            if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-8 text-gray-500">Aucun résultat pour le moment. Lancez un scan !</td></tr>`;
-                return;
+    if (data.length === 0) {
+        tbody.innerHTML = `<tr><td class="text-center p-8 text-gray-500">Aucune donnée.</td></tr>`;
+        return;
+    }
+
+    // 1. Détecter toutes les clés uniques possibles dans les données (sauf les clés techniques)
+    const allKeys = new Set();
+    data.forEach(item => {
+        Object.keys(item).forEach(key => {
+            if (key !== 'extracted_at' && key !== 'source' && key !== '_type') {
+                allKeys.add(key);
             }
+        });
+    });
+    
+    // Convertir en tableau pour l'ordre
+    const columns = Array.from(allKeys);
 
-            data.forEach(job => {
-                const row = document.createElement('tr');
-                row.className = "border-b border-gray-800 hover:bg-gray-800/50 transition group";
-                
-                // Email badge logic
-                const emailBadge = job.email 
-                    ? `<span class="bg-blue-900 text-blue-200 px-2 py-1 rounded text-xs select-all">${job.email}</span>`
-                    : `<span class="text-gray-600 italic">N/A</span>`;
+    // 2. Générer les En-têtes (Headers) dynamiquement
+    columns.forEach(col => {
+        const th = document.createElement('th');
+        th.className = "p-3 capitalize text-gray-300";
+        th.textContent = col.replace(/_/g, ' '); // ex: product_name -> product name
+        thead.appendChild(th);
+    });
+    // Ajouter une colonne date à la fin
+    const thDate = document.createElement('th');
+    thDate.className = "p-3 text-right";
+    thDate.textContent = "Date";
+    thead.appendChild(thDate);
 
-                row.innerHTML = `
-                    <td class="p-3">
-                        <div class="font-bold text-white">${job.title || "Sans titre"}</div>
-                        <div class="text-gray-400 text-xs">${job.organization || "Inconnu"}</div>
-                    </td>
-                    <td class="p-3 text-gray-300">
-                        <i class="fa-solid fa-location-dot text-gray-600 mr-1"></i> ${job.location || "Non précisé"}
-                    </td>
-                    <td class="p-3">
-                        ${emailBadge}
-                    </td>
-                    <td class="p-3 text-right">
-                        <a href="${job.url}" target="_blank" class="text-blue-400 hover:text-blue-300 transition opacity-0 group-hover:opacity-100">
-                            <i class="fa-solid fa-external-link-alt"></i> Voir
-                        </a>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
+
+    // 3. Générer les Lignes (Rows)
+    data.forEach(item => {
+        const row = document.createElement('tr');
+        row.className = "border-b border-gray-800 hover:bg-gray-800/50 transition";
+        
+        let rowHtml = '';
+        
+        columns.forEach(col => {
+            let val = item[col] || '-';
+            
+            // Si c'est une URL ou une Image, on formate joliment
+            if (typeof val === 'string' && val.startsWith('http')) {
+                // Est-ce une image ?
+                if (val.match(/\.(jpeg|jpg|gif|png)$/) != null) {
+                    val = `<img src="${val}" class="h-10 w-10 rounded object-cover border border-gray-700">`;
+                } else {
+                    val = `<a href="${val}" target="_blank" class="text-blue-400 hover:text-blue-300"><i class="fa-solid fa-link"></i> Lien</a>`;
+                }
+            }
+            
+            rowHtml += `<td class="p-3 text-gray-300 text-sm">${val}</td>`;
+        });
+
+        // Date
+        const date = new Date(item.extracted_at).toLocaleTimeString();
+        rowHtml += `<td class="p-3 text-right text-xs text-gray-500">${date}</td>`;
+
+        row.innerHTML = rowHtml;
+        tbody.appendChild(row);
+    });
+}
 
         // Auto-refresh toutes les 10 secondes
         fetchResults();
