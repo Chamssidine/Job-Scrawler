@@ -9,7 +9,21 @@ import './queue/worker.js';
 
 // --- Configuration ---
 const PORT = process.env.PORT || 3000;
-const RESULTS_PATH = "./results.json";
+const RESULTS_PATH = "./data/results.json";
+const SITES_CONFIG_PATH = "./data/sites.json"; // Fichier de config des sites
+
+// --- Helpers ---
+const readJsonFile = async (path, defaultData = []) => {
+    try {
+        const data = await fs.readFile(path, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        if (error.code === 'ENOENT') {
+            return defaultData;
+        }
+        throw error;
+    }
+};
 
 // --- Initialisation de l'application Express ---
 const app = express();
@@ -24,48 +38,123 @@ setupBullBoard(app);
 // GET /api/results - Fournir les résultats de scan
 app.get('/api/results', async (req, res) => {
     try {
-        const data = await fs.readFile(RESULTS_PATH, 'utf-8');
-        res.json(JSON.parse(data));
+        const results = await readJsonFile(RESULTS_PATH, []);
+        res.json(results);
     } catch (error) {
-        if (error.code === 'ENOENT') {
-            return res.json([]);
-        }
         console.error("Erreur lors de la lecture des résultats:", error);
         res.status(500).json({ message: "Erreur serveur." });
     }
 });
 
-// POST /api/scan - Lancer un nouveau scan
-app.post('/api/scan', async (req, res) => {
-    // On récupère url, name et le nouveau champ 'schema'
-    const { url, name, schema } = req.body;
+// GET /api/sites - Récupérer les configurations de sites
+app.get('/api/sites', async (req, res) => {
+    try {
+        const sites = await readJsonFile(SITES_CONFIG_PATH, []);
+        res.json(sites);
+    } catch (error) {
+        console.error("Erreur lors de la lecture des configurations:", error);
+        res.status(500).json({ message: "Erreur serveur." });
+    }
+});
 
-    if (!url) {
-        return res.status(400).json({ message: "L'URL est requise." });
+// POST /api/scan - Lancer un nouveau scan et/ou sauvegarder une config
+app.post('/api/scan', async (req, res) => {
+    const { url, name, schema, saveConfig } = req.body;
+
+    if (!url || !name) {
+        return res.status(400).json({ message: "L'URL et le Nom du projet sont requis." });
     }
 
-    try {
-        const safeJobId = url.replace(/[^a-zA-Z0-9]/g, '-') + `-${Date.now()}`;
+    // Sauvegarder la configuration si demandé
+    if (saveConfig) {
+        const sites = await readJsonFile(SITES_CONFIG_PATH, []);
+        const existingIndex = sites.findIndex(s => s.name === name);
+        const newSite = { name, url, schema: schema || null };
 
-        await crawlQueue.add('crawl-link', {
-            url: url,
-            depth: 0,
-            source: name || "scan-manuel",
+        if (existingIndex !== -1) {
+            sites[existingIndex] = newSite; // Mettre à jour
+        } else {
+            sites.push(newSite); // Ajouter
+        }
+        await fs.writeFile(SITES_CONFIG_PATH, JSON.stringify(sites, null, 2));
+    }
+
+    // Ajouter le job à la file d'attente
+    try {
+        const safeJobId = `scan:${name.replace(/[^a-zA-Z0-9]/g, '-')}:${Date.now()}`;
+        await crawlQueue.add('crawl-job', { // Renommé pour plus de clarté
+            url, 
+            source: name, 
+            schema: schema || null,
             maxDepth: 2,
-            // On transmet le schéma ici. S'il est absent, on passe 'null'.
-            schema: schema || null 
+            depth: 0,
         }, {
             jobId: safeJobId,
-            attempts: 3,
+            attempts: 2,
             backoff: 5000
         });
 
-        console.log(`✅ Nouveau scan ajouté pour : ${url}`);
+        console.log(`✅ Nouveau scan ajouté pour : ${name} (${url})`);
         res.status(202).json({ message: "Scan ajouté à la file d'attente." });
 
     } catch (error) {
         console.error("Erreur lors de l'ajout du scan:", error);
         res.status(500).json({ message: "Erreur lors de l'ajout du scan." });
+    }
+});
+
+// DELETE /api/sites - Supprimer une configuration
+app.delete('/api/sites', async (req, res) => {
+    const { name } = req.body;
+    if (!name) {
+        return res.status(400).json({ message: "Le nom de la configuration est requis." });
+    }
+
+    const sites = await readJsonFile(SITES_CONFIG_PATH, []);
+    const filteredSites = sites.filter(s => s.name !== name);
+
+    if (sites.length === filteredSites.length) {
+        return res.status(404).json({ message: "Configuration non trouvée." });
+    }
+
+    await fs.writeFile(SITES_CONFIG_PATH, JSON.stringify(filteredSites, null, 2));
+    res.status(200).json({ message: `Configuration '${name}' supprimée.` });
+});
+
+
+// GET /api/export - Exporter les résultats en CSV
+app.get('/api/export', async (req, res) => {
+    try {
+        const results = await readJsonFile(RESULTS_PATH, []);
+        if (results.length === 0) {
+            return res.status(404).send("Aucun résultat à exporter.");
+        }
+
+        const headers = new Set();
+        results.forEach(item => Object.keys(item).forEach(key => headers.add(key)));
+        const headerArray = Array.from(headers);
+
+        const escapeCsv = (str) => {
+            if (str === null || str === undefined) return ''
+            str = String(str);
+            if (str.includes('"') || str.includes(',') || str.includes('\n')) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        let csv = headerArray.join(',') + '\n';
+        results.forEach(item => {
+            csv += headerArray.map(header => escapeCsv(item[header])).join(',') + '\n';
+        });
+
+        res.header('Content-Type', 'text/csv');
+        res.attachment('results.csv');
+        res.send(csv);
+
+    } catch (error) {
+        console.error("Erreur lors de l'exportation CSV:", error);
+        res.status(500).send("Erreur serveur lors de l'exportation.");
     }
 });
 
@@ -75,32 +164,25 @@ app.listen(PORT, () => {
     console.log(`📊 Dashboard BullMQ disponible sur http://localhost:${PORT}/admin/queues`);
 });
 
-// --- Lancement des scans initiaux ---
+// --- Lancement des scans au démarrage ---
 async function startInitialDiscovery() {
     try {
-        const sitesData = JSON.parse(await fs.readFile("./data/sites.json", "utf-8"));
-        console.log(`🚀 Injection de ${sitesData.length} configurations initiales...`);
-        
-        for (const site of sitesData) {
-            const safeJobId = site.url.replace(/[^a-zA-Z0-9]/g, '-') + `-${Date.now()}`;
-            await crawlQueue.add('crawl-link', {
-                url: site.url,
-                depth: 0,
-                source: site.name || "inconnu",
-                maxDepth: 2,
-                schema: site.schema || null
-            }, {
-                jobId: safeJobId,
-                attempts: 3,
-                backoff: 5000
-            });
+        const sites = await readJsonFile(SITES_CONFIG_PATH, []);
+        if (sites.length > 0) {
+            console.log(`🚀 Lancement des scans pour ${sites.length} configurations sauvegardées...`);
+            for (const site of sites) {
+                const safeJobId = `initial:${site.name.replace(/[^a-zA-Z0-9]/g, '-')}:${Date.now()}`;
+                await crawlQueue.add('crawl-job', {
+                    url: site.url,
+                    source: site.name,
+                    schema: site.schema || null,
+                    maxDepth: 2,
+                    depth: 0,
+                }, { jobId: safeJobId });
+            }
         }
     } catch (error) {
-        if (error.code !== 'ENOENT') {
-            console.error("❌ Erreur lors du chargement des sites initiaux:", error.message);
-        } else {
-            console.log("ℹ️ Pas de fichier data/sites.json trouvé, aucun scan initial lancé.");
-        }
+        console.error("❌ Erreur lors du lancement des scans initiaux:", error.message);
     }
 }
 

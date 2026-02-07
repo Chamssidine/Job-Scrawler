@@ -8,92 +8,72 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// Fonction utilitaire pour convertir votre schema simple en JSON Schema OpenAI
-function buildDynamicTool(schema) {
+// Fonction utilitaire pour convertir un schéma simple en JSON Schema pour OpenAI
+function buildWriteTool(schema) {
+  const defaultSchema = {
+    title: { type: "string", description: "Le titre du poste ou de l'offre." },
+    organization: { type: "string", description: "Le nom de l'entreprise ou de l'organisation." },
+    email: { type: "string", description: "L'adresse email de contact pour postuler." },
+    url: { type: "string", description: "L'URL de la page où l'offre a été trouvée." }
+  };
+
+  const schemaToUse = schema && Object.keys(schema).length > 0 ? schema : defaultSchema;
+
   const properties = {};
-  const required = ["url"]; // L'URL est toujours obligatoire
+  const required = ["url"]; // L'URL est toujours requise
 
-  // On ajoute toujours l'URL
-  properties.url = { type: "string", description: "L'URL de la page analysée" };
+  // Ajouter l'URL à la liste des propriétés
+  properties.url = { type: "string", description: "L'URL source de la donnée extraite" };
 
-  for (const [key, desc] of Object.entries(schema)) {
-    properties[key] = { type: "string", description: desc };
-    required.push(key);
+  for (const [key, description] of Object.entries(schemaToUse)) {
+    // Si la clé existe déjà (ex: url), on ne la duplique pas
+    if (!properties[key]) { 
+        properties[key] = { type: "string", description: typeof description === 'string' ? description : description.description };
+        required.push(key);
+    }
   }
 
   return {
-    name: "write_result",
-    description: "Sauvegarde les données extraites selon le schéma demandé.",
-    parameters: {
-      type: "object",
-      properties: {
-        data: {
-          type: "object",
-          properties: properties,
-          required: required
-        }
-      },
-      required: ["data"]
+    type: "function",
+    function: {
+      name: "write_result",
+      description: "Sauvegarde les données structurées extraites d'une page web.",
+      parameters: {
+        type: "object",
+        properties: {
+          data: {
+            type: "object",
+            properties: properties,
+            // Filtre pour s'assurer que le `required` ne contient que des clés valides
+            required: required.filter(r => properties[r]) 
+          }
+        },
+        required: ["data"]
+      }
     }
   };
 }
 
 export async function agentStep(state, messages, customSchema = null) {
   
-  // 1. Définir les outils de base
   const tools = [
     {
       type: "function",
       function: {
         name: "crawl_page",
-        description: "Crawl une URL et retourne son contenu analysé",
+        description: "Explore une URL pour en analyser le contenu.",
         parameters: {
           type: "object",
           properties: { url: { type: "string" } },
           required: ["url"]
         }
       }
-    }
+    },
+    // L'outil d'écriture est maintenant toujours construit dynamiquement
+    buildWriteTool(customSchema)
   ];
 
-  // 2. Ajouter l'outil d'écriture dynamique
-  // Si un schéma personnalisé est fourni dans le Job, on l'utilise
-  // Sinon on garde le schéma par défaut (Jobs)
-  let writeTool;
-  if (customSchema) {
-    writeTool = {
-      type: "function",
-      function: buildDynamicTool(customSchema)
-    };
-  } else {
-    // Fallback : Ancien schéma (Jobs FSJ)
-    writeTool = {
-      type: "function",
-      function: {
-        name: "write_result",
-        description: "Enregistre une offre de volontariat",
-        parameters: {
-          type: "object",
-          properties: {
-            data: { // Note: j'ai uniformisé sous la clé "data"
-              type: "object",
-              properties: {
-                title: { type: "string" },
-                organization: { type: "string" },
-                email: { type: "string" },
-                url: { type: "string" }
-              },
-              required: ["title", "email"]
-            }
-          }
-        }
-      }
-    };
-  }
-  
-  tools.push(writeTool);
-
-  // 3. Appel OpenAI
+  // Appel OpenAI
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini", 
     messages,
@@ -103,7 +83,7 @@ export async function agentStep(state, messages, customSchema = null) {
 
   const msg = response.choices[0].message;
 
-  // 4. Gestion des Outils
+  // Gestion des appels d'outils
   if (msg.tool_calls && msg.tool_calls.length > 0) {
     for (const call of msg.tool_calls) {
       const args = JSON.parse(call.function.arguments || "{}");
@@ -118,14 +98,7 @@ export async function agentStep(state, messages, customSchema = null) {
       }
 
       if (call.function.name === "write_result") {
-        // args.data contient maintenant les champs dynamiques (prix, titre, etc.)
-        // On ajoute le type pour le tri dans le JSON final
-        const resultToSave = {
-           ...args.data,
-           _type: customSchema ? "custom" : "job" // Marqueur interne
-        };
-        
-        await writeResult(resultToSave);
+        await writeResult(args.data);
         return { type: "DONE" };
       }
     }
@@ -144,9 +117,10 @@ export async function agentStep(state, messages, customSchema = null) {
               };
           }
       } catch (e) {
-          return { type: "DECISION", decision: "REJECT", reason: "JSON invalide" };
+          // Si le message n'est pas un JSON de décision, on le considère comme une erreur ou un message simple
+          return { type: "DECISION", decision: "REJECT", reason: "Réponse non structurée de l'IA" };
       }
   }
 
-  return { type: "DECISION", decision: "STOP", reason: "No action" };
+  return { type: "DECISION", decision: "STOP", reason: "Aucune action ou outil choisi par l'IA." };
 }

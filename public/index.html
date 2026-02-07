@@ -21,7 +21,7 @@
             backdrop-filter: blur(12px);
             border: 1px solid rgba(75, 85, 99, 0.5); /* gray-600/50 */
         }
-        .job-card:hover {
+        .job-card:hover, .config-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
         }
@@ -54,7 +54,7 @@
                     <form id="scanForm" class="space-y-4">
                         <div>
                             <label class="block text-sm text-gray-400 mb-1" for="siteName">Nom du projet</label>
-                            <input type="text" id="siteName" placeholder="Ex: Amazon - T-shirts" 
+                            <input type="text" id="siteName" placeholder="Ex: Amazon - T-shirts" required
                                 class="w-full bg-gray-900/50 border border-gray-600 rounded p-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition">
                         </div>
                         <div>
@@ -63,8 +63,7 @@
                                 class="w-full bg-gray-900/50 border border-gray-600 rounded p-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition">
                         </div>
                         
-                        <!-- Constructeur de Schéma Dynamique -->
-                        <div class="space-y-3">
+                        <div class="space-y-3 pt-2">
                             <label class="block text-sm text-gray-400">Schéma d'extraction (optionnel)</label>
                             <div id="schemaBuilder" class="space-y-2"></div>
                             <button type="button" id="addSchemaFieldBtn" class="w-full text-sm py-2 px-3 bg-gray-700/60 hover:bg-gray-700 rounded-md transition flex items-center justify-center gap-2">
@@ -72,25 +71,27 @@
                             </button>
                         </div>
 
+                        <div class="pt-2">
+                            <label class="flex items-center text-sm text-gray-400">
+                                <input type="checkbox" id="saveConfigCheckbox" class="h-4 w-4 rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary">
+                                <span class="ml-2">Sauvegarder cette configuration</span>
+                            </label>
+                        </div>
+
                         <button type="submit" 
                             class="w-full bg-primary hover:bg-primary-hover text-white font-bold py-2.5 px-4 rounded-lg transition-all duration-300 flex justify-center items-center gap-2 shadow-lg hover:shadow-primary/30">
-                            <i class="fa-solid fa-plus-circle"></i> Ajouter à la file
+                            <i class="fa-solid fa-plus-circle"></i> Lancer & Ajouter à la file
                         </button>
                     </form>
                     <div id="statusMsg" class="mt-4 text-center text-sm" aria-live="polite"></div>
                 </div>
 
                 <div class="glass-panel p-6 rounded-lg shadow-2xl">
-                    <h2 class="text-lg font-semibold mb-4 text-gray-300">Statistiques</h2>
-                     <div class="space-y-3 text-sm">
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-400">Résultats trouvés:</span>
-                            <span class="font-bold text-green-400 text-lg" id="countTotal">0</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-400">Dernier ajout:</span>
-                            <span class="font-mono text-blue-400" id="lastScanTime">-</span>
-                        </div>
+                     <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-cogs text-primary"></i> Configurations Sauvegardées
+                    </h2>
+                    <div id="sitesContainer" class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                        <!-- Les configurations sauvegardées seront injectées ici -->
                     </div>
                 </div>
             </aside>
@@ -101,9 +102,15 @@
                         <h2 class="text-lg font-semibold flex items-center gap-2">
                             <i class="fa-solid fa-list-check text-primary"></i> Résultats
                         </h2>
-                        <div class="relative w-full sm:max-w-xs">
-                             <input type="text" id="searchInput" placeholder="Filtrer les résultats..." class="w-full bg-gray-900/50 border border-gray-600 rounded-full py-2 pl-10 pr-4 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition">
-                             <i class="fa-solid fa-search text-gray-500 absolute left-4 top-1/2 -translate-y-1/2"></i>
+                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                            <div class="relative w-full sm:max-w-xs flex-grow">
+                                <input type="text" id="searchInput" placeholder="Filtrer les résultats..." class="w-full bg-gray-900/50 border border-gray-600 rounded-full py-2 pl-10 pr-4 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition">
+                                <i class="fa-solid fa-search text-gray-500 absolute left-4 top-1/2 -translate-y-1/2"></i>
+                            </div>
+                            <a id="exportBtn" href="/api/export" download="results.csv" class="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-green-600/80 hover:bg-green-600 text-white rounded-full text-sm font-semibold transition opacity-50 pointer-events-none">
+                                <i class="fa-solid fa-file-csv"></i>
+                                <span>Exporter</span>
+                            </a>
                         </div>
                     </div>
 
@@ -121,26 +128,28 @@
         const searchInput = document.getElementById('searchInput');
         const schemaBuilder = document.getElementById('schemaBuilder');
         const addSchemaFieldBtn = document.getElementById('addSchemaFieldBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const sitesContainer = document.getElementById('sitesContainer');
         let allResults = [];
 
         // --- GESTION DES EVENEMENTS ---
         scanForm.addEventListener('submit', handleScanSubmit);
         searchInput.addEventListener('input', () => renderResults(allResults));
-        addSchemaFieldBtn.addEventListener('click', addSchemaField);
-        schemaBuilder.addEventListener('click', function(e) {
+        addSchemaFieldBtn.addEventListener('click', () => addSchemaField());
+        schemaBuilder.addEventListener('click', (e) => {
             if (e.target.closest('.remove-schema-field')) {
                 e.target.closest('.schema-field-group').remove();
             }
         });
+        sitesContainer.addEventListener('click', handleSiteActions);
 
         // --- FONCTIONS DU CONSTRUCTEUR DE SCHEMA ---
-        function addSchemaField() {
-            const fieldId = `field_${Date.now()}`;
+        function addSchemaField(key = '', value = '') {
             const newField = document.createElement('div');
             newField.className = 'schema-field-group flex items-center gap-2';
             newField.innerHTML = `
-                <input type="text" placeholder="Clé (ex: produit)" class="schema-key w-1/3 bg-gray-900/50 border border-gray-600 rounded p-2 text-sm focus:border-primary focus:outline-none">
-                <input type="text" placeholder="Description (ex: nom du produit)" class="schema-value flex-grow bg-gray-900/50 border border-gray-600 rounded p-2 text-sm focus:border-primary focus:outline-none">
+                <input type="text" placeholder="Clé" value="${key}" class="schema-key w-1/3 bg-gray-900/50 border border-gray-600 rounded p-2 text-sm focus:border-primary focus:outline-none">
+                <input type="text" placeholder="Description" value="${value}" class="schema-value flex-grow bg-gray-900/50 border border-gray-600 rounded p-2 text-sm focus:border-primary focus:outline-none">
                 <button type="button" class="remove-schema-field flex-shrink-0 h-9 w-9 text-gray-500 hover:text-red-400 transition"><i class="fa-solid fa-trash"></i></button>
             `;
             schemaBuilder.appendChild(newField);
@@ -149,65 +158,131 @@
         function buildSchemaFromUI() {
             const fields = schemaBuilder.querySelectorAll('.schema-field-group');
             const schema = {};
-            let isValid = true;
             fields.forEach(field => {
                 const key = field.querySelector('.schema-key').value.trim();
                 const value = field.querySelector('.schema-value').value.trim();
-                if (key && value) {
-                    schema[key] = value;
-                } else if (key || value) { // Si un seul des deux est rempli
-                    isValid = false;
-                }
+                if (key && value) schema[key] = value;
             });
-
-            if (!isValid) {
-                showStatus("❌ Tous les champs du schéma doivent être remplis.", "text-red-400");
-                return null;
-            }
-
-            // Si aucun champ n'a été ajouté, on retourne null
-            if (Object.keys(schema).length === 0) return null; 
-
-            return schema;
+            return Object.keys(schema).length > 0 ? schema : null;
         }
 
-        // --- FONCTIONS PRINCIPALES ---
+        function populateForm(config) {
+            document.getElementById('siteName').value = config.name;
+            document.getElementById('siteUrl').value = config.url;
+            schemaBuilder.innerHTML = '';
+            if (config.schema) {
+                for (const [key, value] of Object.entries(config.schema)) {
+                    addSchemaField(key, value);
+                }
+            }
+            document.getElementById('saveConfigCheckbox').checked = true;
+        }
+
+        // --- FONCTIONS DE GESTION DES CONFIGURATIONS ---
+        async function fetchSites() {
+            try {
+                const res = await fetch('/api/sites');
+                const sites = await res.json();
+                renderSites(sites);
+            } catch (err) {
+                console.error("Erreur de récupération des sites:", err);
+            }
+        }
+
+        function renderSites(sites) {
+            sitesContainer.innerHTML = '';
+            if (sites.length === 0) {
+                sitesContainer.innerHTML = `<p class="text-center text-sm text-gray-500">Aucune configuration.</p>`;
+                return;
+            }
+            sites.forEach(site => {
+                const card = document.createElement('div');
+                card.className = 'config-card glass-panel p-3 rounded-lg border border-transparent hover:border-primary/50 transition-all duration-300';
+                card.dataset.config = JSON.stringify(site);
+                card.innerHTML = `
+                    <p class="font-bold text-sm truncate">${site.name}</p>
+                    <p class="text-xs text-gray-400 truncate">${site.url}</p>
+                    <div class="flex items-center gap-2 mt-3">
+                        <button class="run-config-btn w-full text-xs py-1 px-2 bg-blue-600/50 hover:bg-blue-600/80 rounded transition">Lancer</button>
+                        <button class="edit-config-btn w-auto text-xs py-1 px-2 bg-gray-600/50 hover:bg-gray-600/80 rounded transition"><i class="fa-solid fa-pencil"></i></button>
+                        <button class="delete-config-btn w-auto text-xs py-1 px-2 bg-red-600/50 hover:bg-red-600/80 rounded transition"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+                sitesContainer.appendChild(card);
+            });
+        }
+
+        async function handleSiteActions(e) {
+            const configCard = e.target.closest('.config-card');
+            if (!configCard) return;
+            const config = JSON.parse(configCard.dataset.config);
+
+            if (e.target.closest('.run-config-btn')) {
+                await runScan(config, false); 
+            } else if (e.target.closest('.edit-config-btn')) {
+                populateForm(config);
+            } else if (e.target.closest('.delete-config-btn')) {
+                if (!confirm(`Voulez-vous vraiment supprimer la configuration "${config.name}" ?`)) return;
+                try {
+                    const res = await fetch('/api/sites', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: config.name })
+                    });
+                    if (!res.ok) throw new Error((await res.json()).message);
+                    showStatus(`✅ Configuration "${config.name}" supprimée`, "text-green-400");
+                    fetchSites();
+                } catch (err) {
+                    showStatus(`❌ ${err.message}`, "text-red-400");
+                }
+            }
+        }
+
+        // --- FONCTIONS PRINCIPALES DE SCAN ---
         async function handleScanSubmit(e) {
             e.preventDefault();
-            const url = document.getElementById('siteUrl').value;
             const name = document.getElementById('siteName').value;
-            const btn = e.target.querySelector('button[type="submit"]');
-            
+            const url = document.getElementById('siteUrl').value;
             const schema = buildSchemaFromUI();
-            if (schema === undefined) return; // Erreur affichée par buildSchemaFromUI
+            const saveConfig = document.getElementById('saveConfigCheckbox').checked;
 
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Traitement...';
-            btn.disabled = true;
+            await runScan({ name, url, schema }, saveConfig, e.target.querySelector('button[type="submit"]'));
+        }
+
+        async function runScan(config, save, btn = null) {
+            let originalText;
+            if (btn) {
+                originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Traitement...';
+                btn.disabled = true;
+            }
 
             try {
                 const res = await fetch(`/api/scan`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, name, schema })
+                    body: JSON.stringify({ ...config, saveConfig: save })
                 });
                 
                 if (res.ok) {
-                    showStatus("✅ Ajouté à la file d'attente !", "text-green-400");
-                    scanForm.reset();
-                    schemaBuilder.innerHTML = ''; // Vider les champs de schéma
+                    showStatus("✅ Scan ajouté à la file d'attente !", "text-green-400");
+                    if (save) {
+                        scanForm.reset();
+                        schemaBuilder.innerHTML = '';
+                        fetchSites(); // Rafraîchir la liste
+                    }
                 } else {
-                    const errorData = await res.json();
-                    throw new Error(errorData.message || 'Erreur serveur');
+                    throw new Error((await res.json()).message || 'Erreur serveur');
                 }
             } catch (err) {
                 showStatus(`❌ ${err.message}`, "text-red-400");
             } finally {
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    hideStatus();
-                }, 2500);
+                if (btn) {
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }, 2500);
+                }
             }
         }
 
@@ -215,7 +290,7 @@
             try {
                 const res = await fetch(`/api/results`);
                 let data = await res.json();
-                data.sort((a, b) => new Date(b.extracted_at) - new Date(a.extracted_at));
+                data.sort((a, b) => new Date(b.extractedAt) - new Date(a.extractedAt));
                 
                 if (JSON.stringify(allResults) !== JSON.stringify(data)) {
                     allResults = data;
@@ -231,18 +306,11 @@
             const container = document.getElementById('resultsContainer');
             const filterText = searchInput.value.toLowerCase();
             
-            const filteredData = data.filter(item => {
-                const searchableContent = JSON.stringify(item).toLowerCase();
-                return searchableContent.includes(filterText);
-            });
+            const filteredData = data.filter(item => JSON.stringify(item).toLowerCase().includes(filterText));
             
             container.innerHTML = '';
-
             if (filteredData.length === 0) {
-                container.innerHTML = `<div class="text-center p-10 text-gray-500">
-                                           <i class="fa-solid fa-ghost text-3xl mb-4"></i>
-                                           <p>Aucun résultat à afficher.</p>
-                                       </div>`;
+                container.innerHTML = `<div class="text-center p-10 text-gray-500"><i class="fa-solid fa-ghost text-3xl mb-4"></i><p>Aucun résultat à afficher.</p></div>`;
                 return;
             }
 
@@ -250,24 +318,13 @@
                 const card = document.createElement('div');
                 card.className = "job-card glass-panel p-4 rounded-lg border border-transparent hover:border-primary/50 transition-all duration-300";
                 
-                const { url, email, extracted_at, ...displayData } = item;
+                const { url, email, extractedAt, ...displayData } = item;
+                const titleKey = Object.keys(displayData).find(k => k.toLowerCase().includes('title') || k.toLowerCase().includes('name')) || Object.keys(displayData)[0];
+                const title = displayData[titleKey] || 'Résultat sans titre';
 
-                let title = 'Résultat';
-                let detailsHtml = '';
-                
-                const keys = Object.keys(displayData);
-                if (keys.length > 0) {
-                    const titleKey = keys.find(k => k.toLowerCase().includes('title') || k.toLowerCase().includes('name') || k.toLowerCase().includes('nom')) || keys[0];
-                    title = displayData[titleKey] || 'Titre non disponible';
-
-                    detailsHtml = Object.entries(displayData)
-                        .filter(([key]) => key !== titleKey)
-                        .map(([key, value]) => `
-                            <div class="text-sm text-gray-400 mt-2">
-                                <strong class="text-gray-500 capitalize">${key.replace(/_/g, ' ')}:</strong> ${value || 'N/A'}
-                            </div>
-                        `).join('');
-                }
+                const detailsHtml = Object.entries(displayData)
+                    .filter(([key]) => key !== titleKey)
+                    .map(([key, value]) => `<div class="text-sm text-gray-400 mt-2"><strong class="text-gray-500 capitalize">${key.replace(/_/g, ' ')}:</strong> ${value || 'N/A'}</div>`).join('');
 
                 card.innerHTML = `
                     <div class="flex flex-col sm:flex-row justify-between sm:items-start gap-3">
@@ -281,7 +338,7 @@
                         </div>
                     </div>
                     <div class="text-right text-xs text-gray-600 font-mono mt-3 pt-3 border-t border-gray-700/50">
-                        ${new Date(extracted_at).toLocaleString('fr-FR')}
+                        ${new Date(extractedAt || Date.now()).toLocaleString('fr-FR')}
                     </div>
                 `;
                 container.appendChild(card);
@@ -291,15 +348,20 @@
         // --- FONCTIONS UTILITAIRES ---
         function updateStats(data) {
             document.getElementById('countTotal').textContent = data.length;
-            if(data.length > 0) {
-                const date = new Date(data[0].extracted_at);
+            if (data.length > 0) {
+                const date = new Date(data[0].extractedAt);
                 document.getElementById('lastScanTime').textContent = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                exportBtn.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                document.getElementById('lastScanTime').textContent = '-';
+                exportBtn.classList.add('opacity-50', 'pointer-events-none');
             }
         }
         
         function showStatus(message, styleClass) {
             statusMsg.textContent = message;
             statusMsg.className = `mt-4 text-center text-sm ${styleClass} transition-opacity duration-300 opacity-100`;
+            setTimeout(hideStatus, 3000);
         }
 
         function hideStatus() {
@@ -308,6 +370,7 @@
 
         // --- INITIALISATION ---
         fetchResults();
+        fetchSites();
         setInterval(fetchResults, 5000);
 
     </script>
