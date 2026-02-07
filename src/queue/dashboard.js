@@ -1,6 +1,5 @@
 
-import { createBullBoard } from '@bull-board/api';
-import { BullMQAdapter } from '@bull-board/api/bullMQAdapter.js';
+import { createBullBoard, BullMQAdapter } from '@bull-board/api';
 import { ExpressAdapter } from '@bull-board/express';
 import { crawlQueue } from './setup.js';
 
