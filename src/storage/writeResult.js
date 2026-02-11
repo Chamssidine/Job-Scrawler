@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { normalizeUrl } from "../core/url.js";
 
 // --- CORRECT FILE PATH ---
 const FILE_PATH = path.join(process.cwd(), "data", "results.json");
@@ -21,6 +22,9 @@ export async function writeResult(job) {
       sanitizedJob[key] = job[key];
     }
   }
+
+  // Normaliser URL
+  if (sanitizedJob.url) sanitizedJob.url = normalizeUrl(sanitizedJob.url);
 
   // S'assurer que les champs essentiels sont présents après nettoyage
   if (!sanitizedJob.url) {

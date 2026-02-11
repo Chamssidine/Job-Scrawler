@@ -8,7 +8,11 @@ const BLOCKLIST = [
   "login", "register", "anmeldung", "passwort", 
   "impressum", "datenschutz", "agb", "privacy", 
   "javascript:", "mailto:", "tel:", "#", 
-  "gebaerdensprache", "leichte-sprache", "presse", "kontakt"
+  "gebaerdensprache", "leichte-sprache", "presse", "kontakt",
+  // Parasites courants
+  "cookie", "cookiebar", "CookieWarning", "tx_bafzacookiebar", "cHash=", "type=",
+  // Réseaux sociaux et docs
+  "facebook.com", "twitter.com", "instagram.com", "linkedin.com", ".pdf"
 ];
 
 export function extractSignals($, baseUrl) {
@@ -37,8 +41,10 @@ export function extractSignals($, baseUrl) {
       if (!href) return null;
       try {
         const fullUrl = new URL(href, baseUrl).href;
+        // Filtrage de query tracking
+        if (/utm_|fbclid=/i.test(fullUrl)) return null;
         
-        // On applique ta BLOCKLIST
+        // On applique la BLOCKLIST
         if (BLOCKLIST.some(bad => fullUrl.toLowerCase().includes(bad))) return null;
         
         // On reste sur le domaine d'origine

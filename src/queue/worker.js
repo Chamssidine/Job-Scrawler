@@ -1,5 +1,6 @@
 import { Worker } from 'bullmq';
 import crypto from 'crypto';
+import { normalizeUrl } from '../core/url.js';
 import { connection, crawlQueue } from './setup.js';
 import { crawlPage } from '../crawler/crawlPage.js';
 import { agentStep } from '../agent/orchestrator.js';
@@ -28,7 +29,9 @@ const worker = new Worker('job-crawler', async (job) => {
   // Propagation du schéma aux enfants (liens suivis)
   if (Array.isArray(page.links) && page.links.length && depth < maxDepth) {
     console.log(`📎 Enqueue enfants: depth=${depth}/${maxDepth} links=${page.links.length}`);
-    const results = await Promise.allSettled(page.links.map(async (link) => {
+    const CHILD_LIMIT = parseInt(process.env.CHILD_LIMIT || '20', 10);
+    const results = await Promise.allSettled(page.links.slice(0, CHILD_LIMIT).map(async (rawLink) => {
+      const link = normalizeUrl(rawLink);
       return crawlQueue.add('crawl-link', {
         url: link,
         depth: depth + 1,
@@ -109,7 +112,7 @@ const worker = new Worker('job-crawler', async (job) => {
   } else if (decision && decision.type === 'DONE') {
     console.log(`\x1b[32m[✅ Résultat sauvegardé]\x1b[0m ${page.url}`);
     try {
-      await writeResult({ url: currentPage?.url || page.url, score: lastScoring?.score, reasons: lastScoring?.reasons });
+      await writeResult({ url: currentPage?.url || page.url, score: lastScoring?.score, reasons: lastScoring?.reasons, source });
     } catch {}
   } else if (decision && decision.type === 'DECISION') {
     console.log(`\x1b[33m[⚠️ Décision IA: ${decision.decision}]\x1b[0m ${decision.reason || ''}`);
@@ -119,7 +122,8 @@ const worker = new Worker('job-crawler', async (job) => {
       console.log(`\x1b[36m[→ FOLLOW] targets=${targets.length} | page.links=${Array.isArray(page.links) ? page.links.length : 0}\x1b[0m`);
 
       // 1) Suivre les targets explicitement fournis par l'IA
-      for (const link of targets) {
+      for (const rawLink of targets.slice(0, CHILD_LIMIT)) {
+        const link = normalizeUrl(rawLink);
         try {
           await crawlQueue.add('crawl-link', {
             url: link,
@@ -134,7 +138,8 @@ const worker = new Worker('job-crawler', async (job) => {
 
       // 2) Fallback: si l'IA n'a pas renvoyé de targets, utiliser les liens filtrés de la page
       if (enqueued === 0 && Array.isArray(page.links) && page.links.length && depth < maxDepth) {
-        for (const link of page.links) {
+        for (const rawLink of page.links.slice(0, CHILD_LIMIT)) {
+          const link = normalizeUrl(rawLink);
           try {
             await crawlQueue.add('crawl-link', {
               url: link,

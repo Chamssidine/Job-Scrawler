@@ -7,7 +7,7 @@ import setupBullBoard from './queue/dashboard.js';
 import './queue/worker.js';
 
 // --- Configuration ---
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 const RESULTS_PATH = "./data/results.json";
 const SITES_CONFIG_PATH = "./data/sites.json";
 const LOGS_PATH = "./data/logs.json";
@@ -269,7 +269,7 @@ app.post('/api/scan', async (req, res) => {
             url: sanitizedUrl, 
             source: sanitizedName, 
             schema: sanitizedSchema || null,
-            maxDepth: 2,
+            maxDepth: 3,
             depth: 0,
         }, {
             jobId: safeJobId,

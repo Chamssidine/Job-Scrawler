@@ -129,6 +129,31 @@
 							</a>
 						</div>
 					</div>
+
+					<!-- Facet filters -->
+					<div id="filtersBar" class="grid grid-cols-1 md:grid-cols-6 gap-2 mb-2">
+						<select id="filterHost" class="bg-gray-900/50 border border-gray-600 rounded px-3 py-2 text-sm focus:border-primary focus:outline-none">
+							<option value="">Tous les hôtes</option>
+						</select>
+						<select id="filterSource" class="bg-gray-900/50 border border-gray-600 rounded px-3 py-2 text-sm focus:border-primary focus:outline-none">
+							<option value="">Toutes les sources</option>
+						</select>
+						<label class="flex items-center gap-2 text-sm text-gray-300 px-3 py-2 bg-gray-900/50 border border-gray-600 rounded">
+							<input type="checkbox" id="filterEmailOnly" class="h-4 w-4 rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary">
+							<span>Email uniquement</span>
+						</label>
+						<div class="flex items-center gap-2 px-3 py-2 bg-gray-900/50 border border-gray-600 rounded text-sm">
+							<span class="text-gray-400">Score ≥</span>
+							<input type="number" id="filterMinScore" min="0" step="5" value="0" class="w-20 bg-transparent border border-gray-700 rounded px-2 py-1 focus:border-primary focus:outline-none">
+						</div>
+						<select id="sortBy" class="bg-gray-900/50 border border-gray-600 rounded px-3 py-2 text-sm focus:border-primary focus:outline-none">
+							<option value="newest">Nouveaux d'abord</option>
+							<option value="score_desc">Score décroissant</option>
+							<option value="host_asc">Hôte A→Z</option>
+							<option value="title_az">Titre A→Z</option>
+						</select>
+						<button id="resetFilters" type="button" class="text-sm px-3 py-2 bg-gray-700/50 hover:bg-gray-700 rounded text-gray-200 border border-gray-600">Réinitialiser</button>
+					</div>
 					<div id="resultsContainer" class="space-y-4 mt-6 h-[calc(100vh-250px)] overflow-y-auto pr-2"></div>
 				</div>
 			</section>
@@ -152,14 +177,56 @@
 		const exportBtn = document.getElementById('exportBtn');
 		const sitesContainer = document.getElementById('sitesContainer');
 		const jobsContainer = document.getElementById('jobsContainer');
+		// Filters
+		const filterHost = document.getElementById('filterHost');
+		const filterSource = document.getElementById('filterSource');
+		const filterEmailOnly = document.getElementById('filterEmailOnly');
+		const filterMinScore = document.getElementById('filterMinScore');
+		const sortBy = document.getElementById('sortBy');
+		const resetFiltersBtn = document.getElementById('resetFilters');
 		let allResults = [];
+		let firstResultsLoad = true;
+
+		// Filters persistence (global)
+		const FILTERS_KEY = 'resultsFiltersV1';
+		function saveFilters(){
+			try{
+				const payload = {
+					host: filterHost.value || '',
+					source: filterSource.value || '',
+					emailOnly: !!filterEmailOnly.checked,
+					minScore: filterMinScore.value || '0',
+					sort: sortBy.value || 'newest',
+					search: searchInput.value || ''
+				};
+				localStorage.setItem(FILTERS_KEY, JSON.stringify(payload));
+			}catch{}
+		}
+		function loadFilters(){
+			try{ const raw = localStorage.getItem(FILTERS_KEY); if(!raw) return null; return JSON.parse(raw); }catch{ return null; }
+		}
+		function resetFilters(){
+			filterHost.value = '';
+			filterSource.value = '';
+			filterEmailOnly.checked = false;
+			filterMinScore.value = '0';
+			sortBy.value = 'newest';
+			searchInput.value = '';
+		}
 
 		// Events
 		scanForm.addEventListener('submit', handleScanSubmit);
-		searchInput.addEventListener('input', () => renderResults(allResults));
+		searchInput.addEventListener('input', () => { saveFilters(); applyFiltersAndRender(); });
 		addSchemaFieldBtn.addEventListener('click', () => addSchemaField());
 		schemaBuilder.addEventListener('click', (e) => { if (e.target.closest('.remove-schema-field')) e.target.closest('.schema-field-group').remove(); });
 		sitesContainer.addEventListener('click', handleSiteActions);
+		// Facet events
+		filterHost.addEventListener('change', () => { saveFilters(); applyFiltersAndRender(); });
+		filterSource.addEventListener('change', () => { saveFilters(); applyFiltersAndRender(); });
+		filterEmailOnly.addEventListener('change', () => { saveFilters(); applyFiltersAndRender(); });
+		filterMinScore.addEventListener('input', () => { saveFilters(); applyFiltersAndRender(); });
+		sortBy.addEventListener('change', () => { saveFilters(); applyFiltersAndRender(); });
+		resetFiltersBtn.addEventListener('click', () => { resetFilters(); applyFiltersAndRender(); saveFilters(); });
 
 		// Schema builder
 		function addSchemaField(key = '', value = '') {
@@ -236,12 +303,116 @@
 		      const newly = data.filter(r=>!prev.has(r.url));
 		      console.log(`📊 Mise à jour UI: ${allResults.length} → ${data.length}`);
 		      allResults = data;
-		      updateStats(allResults);
-		      renderResults(allResults);
+			updateStats(allResults);
+			populateFilters(allResults);
+		      applyFiltersAndRender();
 		      if(newly.length>0){ showToast(`${newly.length} nouveau${newly.length>1?'x':''} résultat${newly.length>1?'s':''}`); }
 		    }
 		  } catch(err){ console.error('Erreur de récupération des résultats:', err); }
 		}
+
+				function getHostFromUrl(u){
+					try{ if(!u) return ''; return new URL(u).hostname; }
+					catch{
+						try{
+							const m = String(u||'').match(/^https?:\/\/([^\/]+)/i);
+							if(m && m[1]) return m[1];
+							return String(u||'').split('/')[0] || '';
+						}catch{ return ''; }
+					}
+				}
+
+				function populateFilters(data){
+					try{
+						const saved = firstResultsLoad ? loadFilters() : null;
+						if(firstResultsLoad && saved){
+							// Preload persisted values before options are built
+							filterHost.value = saved.host || '';
+							filterSource.value = saved.source || '';
+							filterEmailOnly.checked = !!saved.emailOnly;
+							filterMinScore.value = saved.minScore ?? '0';
+							sortBy.value = saved.sort || 'newest';
+							searchInput.value = saved.search || '';
+						}
+						const currentHost = filterHost.value;
+						const currentSource = filterSource.value;
+						let hosts = Array.from(new Set(data.map(d=>getHostFromUrl(d.url)).filter(Boolean)));
+						if(hosts.length === 0 && Array.isArray(data) && data.length>0){
+							// Fallback: try to parse from possible string fields
+							hosts = Array.from(new Set(data.map(d=>{
+								const u = d && (d.url||d.link||'');
+								return getHostFromUrl(u);
+							}).filter(Boolean)));
+						}
+						hosts.sort((a,b)=>a.localeCompare(b));
+						const sources = Array.from(new Set(data.map(d=>d.source).filter(Boolean))).sort((a,b)=>a.localeCompare(b));
+						// Host options
+						const hostOpts = '<option value="">Tous les hôtes</option>' + hosts.map(h=>`<option value="${h}">${h}</option>`).join('');
+						filterHost.innerHTML = hostOpts;
+						if(currentHost && hosts.includes(currentHost)) {
+							filterHost.value = currentHost;
+						} else {
+							filterHost.value = '';
+						}
+						// Source options
+						filterSource.innerHTML = '<option value="">Toutes les sources</option>' + sources.map(s=>`<option value="${s}">${s}</option>`).join('');
+						if(currentSource && sources.includes(currentSource)) {
+							filterSource.value = currentSource;
+						} else {
+							filterSource.value = '';
+						}
+					} catch(err){ console.error('populateFilters error', err); }
+					finally { if(firstResultsLoad){ firstResultsLoad = false; } }
+				}
+
+		function getTitleForSort(item){
+		  const { url, email, extracted_at, score, reasons, ...displayData } = item;
+		  const keys = Object.keys(displayData);
+		  const preferred = ['title','nom','name','organization'];
+		  const titleKey = preferred.find(pk => keys.some(k => k.toLowerCase()===pk)) ||
+		                   keys.find(k => k.toLowerCase().includes('title') || k.toLowerCase().includes('name')) ||
+		                   keys[0];
+		  return (displayData[titleKey] || '').toString();
+		}
+
+				function applyFiltersAndRender(){
+					try{
+						const host = filterHost.value || '';
+						const source = filterSource.value || '';
+						const emailOnly = filterEmailOnly.checked;
+						const minScore = parseFloat(filterMinScore.value || '0');
+						const minS = Number.isFinite(minScore) ? minScore : 0;
+						const sort = sortBy.value || 'newest';
+						let data = (Array.isArray(allResults)?allResults:[]).filter(item => {
+							if(!item) return false;
+							if(host && getHostFromUrl(item.url) !== host) return false;
+							if(source && (item.source||'') !== source) return false;
+							if(emailOnly){
+								const e = String(item.email ?? '').trim().toLowerCase();
+								if(!e || e==='n/a' || e==='na' || e==='—' || e==='-') return false;
+							}
+							const hasScore = (typeof item.score === 'number');
+							if(minS > 0){ if(!hasScore || item.score < minS) return false; }
+							return true;
+						});
+						// Sorting
+						data.sort((a,b)=>{
+							if(sort==='score_desc'){
+								const as = (typeof a.score==='number')?a.score:-Infinity; const bs=(typeof b.score==='number')?b.score:-Infinity; return bs - as;
+							} else if(sort==='host_asc'){
+								return getHostFromUrl(a.url).localeCompare(getHostFromUrl(b.url));
+							} else if(sort==='title_az'){
+								return getTitleForSort(a).localeCompare(getTitleForSort(b));
+							} else { // newest
+								return new Date(b.extracted_at||0) - new Date(a.extracted_at||0);
+							}
+						});
+						renderResults(data);
+					}catch(err){
+						console.error('applyFiltersAndRender error', err);
+						renderResults(Array.isArray(allResults)?allResults:[]);
+					}
+				}
 		function renderResults(data){
 			const container = document.getElementById('resultsContainer');
 			const filterText = (searchInput.value || '').toLowerCase();
@@ -257,7 +428,11 @@
 				card.className = 'job-card glass-panel p-4 rounded-lg border border-transparent hover:border-primary/50 transition-all duration-300';
 
 				const { url, email, extracted_at, score, reasons, ...displayData } = item;
-				const titleKey = Object.keys(displayData).find(k => k.toLowerCase().includes('title') || k.toLowerCase().includes('name')) || Object.keys(displayData)[0];
+				const keys = Object.keys(displayData);
+				const preferred = ['title','nom','name','organization'];
+				const titleKey = preferred.find(pk => keys.some(k => k.toLowerCase()===pk)) ||
+				                 keys.find(k => k.toLowerCase().includes('title') || k.toLowerCase().includes('name')) ||
+				                 keys[0];
 				const title = displayData[titleKey] || 'Résultat sans titre';
 
 				let host = '';
@@ -281,7 +456,9 @@
 					</div>
 				` : '';
 
-				card.innerHTML = `
+								const extractedTs = item.extracted_at ? new Date(item.extracted_at).toLocaleString('fr-FR') : '-';
+								const updatedTs = item.updated_at ? new Date(item.updated_at).toLocaleString('fr-FR') : null;
+								card.innerHTML = `
 					<div class=\"flex flex-col sm:flex-row justify-between sm:items-start gap-3\">
 						<div class=\"flex-grow\">
 							<h3 class=\"font-bold text-md text-gray-100\">${title}</h3>
@@ -294,7 +471,7 @@
 							${url ? `<a href=\"${url}\" target=\"_blank\" class=\"h-8 w-8 flex items-center justify-center bg-primary/20 hover:bg-primary/40 rounded-full text-primary transition\" title=\"Voir la source\"><i class=\"fa-solid fa-arrow-up-right-from-square\"></i></a>` : ''}
 						</div>
 					</div>
-					<div class=\"text-right text-xs text-gray-600 font-mono mt-3 pt-3 border-t border-gray-700/50\">${new Date(item.extracted_at || Date.now()).toLocaleString('fr-FR')}</div>
+									<div class=\"text-right text-xs text-gray-600 font-mono mt-3 pt-3 border-t border-gray-700/50\">${updatedTs ? `<span class=\\\"text-gray-300\\\">MAJ: ${updatedTs}</span><span class=\\\"ml-2 text-gray-500\\\">Extrait: ${extractedTs}</span>` : extractedTs}</div>
 				`;
 				container.appendChild(card);
 			});

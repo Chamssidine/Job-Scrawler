@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import { extractSignals } from "./extract.js";
 import { filterUrlsWithAI } from "./urlFilter.js";
 import { URL } from "url";
+import { normalizeUrl } from "../core/url.js";
 import { withPage } from "./browser.js";
 
 export async function crawlPage(url) {
@@ -97,7 +98,7 @@ export async function crawlPage(url) {
 
   if (finalData && finalData.links) {
     const noiseQuery = /(tx_bafzacookiebar|CookieWarning|closeCookieBar|cHash=|type=\d+)/i;
-    const cleanLinks = [...new Set(finalData.links)].filter(link => {
+    const cleanLinks = [...new Set(finalData.links.map(normalizeUrl))].filter(link => {
       if (!link || !link.startsWith("http") || link.includes("#")) return false;
       // Écarter liens évidents non pertinents
       const blacklist = /impressum|datenschutz|privacy|kontakt|contact|presse|login|newsletter|agb|sitemap|facebook|twitter|instagram|linkedin|\.pdf$/i;
