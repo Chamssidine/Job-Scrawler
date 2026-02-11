@@ -1,5 +1,6 @@
 import "dotenv/config";
 import OpenAI from "openai";
+import pLimit from "p-limit";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -27,44 +28,58 @@ export async function filterUrlsWithAI(links, currentUrl) {
 
   console.log(`🤖 IA : Analyse de ${preFiltered.length} liens en ${chunks.length} lots parallèles...`);
 
- 
+  const limit = pLimit(parseInt(process.env.OPENAI_PARALLEL || '3', 10));
+
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+  async function callChunkWithRetry(chunk) {
+    const maxAttempts = 3;
+    let attempt = 0;
+    while (true) {
+      attempt++;
+      try {
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: `Tu es un expert en recrutement.
+              Sélectionne UNIQUEMENT :
+              1. Les offres d'emploi (job details).
+              2. Les listes d'offres (job listings).
+              Réponds uniquement en JSON : {"valid_urls": []}`
+            },
+            {
+              role: "user",
+              content: `Source: ${currentUrl}\nURLs : ${JSON.stringify(chunk)}`
+            }
+          ],
+          response_format: { type: "json_object" }
+        });
+
+        const data = JSON.parse(response.choices[0].message.content);
+        return data.valid_urls || [];
+      } catch (error) {
+        const retriable = error.status === 429 || (error.status >= 500) || /timeout|fetch failed/i.test(error.message || '');
+        if (attempt < maxAttempts && retriable) {
+          const delay = 500 * Math.pow(2, attempt - 1);
+          console.warn(`Retry chunk (${attempt}/${maxAttempts}) après ${delay}ms:`, error.message);
+          await sleep(delay);
+          continue;
+        }
+        console.error("❌ Échec filtrage chunk:", error.message);
+        return [];
+      }
+    }
+  }
+
   try {
-    const promises = chunks.map(async (chunk, index) => {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: `Tu es un expert en recrutement.
-            Sélectionne UNIQUEMENT :
-            1. Les offres d'emploi (job details).
-            2. Les listes d'offres (job listings).
-            Réponds uniquement en JSON : {"valid_urls": []}`
-          },
-          {
-            role: "user",
-            content: `Source: ${currentUrl}\nURLs : ${JSON.stringify(chunk)}`
-          }
-        ],
-        response_format: { type: "json_object" }
-      });
-
-      const data = JSON.parse(response.choices[0].message.content);
-      return data.valid_urls || [];
-    });
-
-  
-    const results = await Promise.all(promises);
-    
- 
+    const results = await Promise.all(chunks.map(c => limit(() => callChunkWithRetry(c))));
     const finalUrls = results.flat();
-
     console.log(`✅ Filtrage terminé : ${finalUrls.length} retenus.`);
     return finalUrls;
-
   } catch (error) {
-    console.error("❌ Erreur lors du filtrage parallèle :", error.message);
- 
-    return preFiltered.slice(0, 10); 
+    console.error("❌ Erreur lors du filtrage parallèle:", error.message);
+    return preFiltered.slice(0, 10);
   }
 }

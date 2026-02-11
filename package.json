@@ -1,8 +1,9 @@
 {
   "name": "intl-job-agent",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
+    "start": "node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -17,6 +18,8 @@
     "bullmq": "^5.67.3",
     "cheerio": "^1.1.0",
     "dotenv": "^17.2.3",
+    "ioredis": "^5.4.1",
+    "p-limit": "^4.0.0",
     "express": "^5.2.1",
     "openai": "^6.15.0",
     "pdf-parse": "^2.2.2",

@@ -26,6 +26,53 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
         }
         .schema-field-group:not(:last-child) { margin-bottom: 0.75rem; }
+
+        /* Animations de progression */
+        @keyframes spin-smooth { to { transform: rotate(360deg); } }
+        @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .spinner { animation: spin-smooth 1s linear infinite; }
+        .pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+
+        /* Barre de progression */
+        .progress-bar { 
+            height: 4px; 
+            background: rgba(59, 130, 246, 0.2); 
+            border-radius: 2px; 
+            overflow: hidden;
+        }
+        .progress-fill { 
+            height: 100%; 
+            background: linear-gradient(90deg, #3b82f6, #60a5fa); 
+            transition: width 0.3s ease; 
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        /* Job status panel */
+        .job-active { 
+            border-left: 4px solid #3b82f6; 
+            background: rgba(59, 130, 246, 0.05);
+        }
+        .job-waiting { 
+            border-left: 4px solid #f59e0b; 
+            background: rgba(245, 158, 11, 0.05);
+        }
+        .job-completed { 
+            border-left: 4px solid #10b981; 
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        /* Badge animations */
+        .badge-pulse { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 0.5rem; 
+            padding: 0.25rem 0.75rem; 
+            border-radius: 9999px; 
+            font-size: 0.875rem; 
+            font-weight: 500;
+        }
+        .badge-active { background: rgba(59, 130, 246, 0.1); color: #60a5fa; }
+        .badge-waiting { background: rgba(245, 158, 11, 0.1); color: #fbbf24; }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200 font-sans antialiased">
@@ -87,11 +134,39 @@
                 </div>
 
                 <div class="glass-panel p-6 rounded-lg shadow-2xl">
-                     <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
                         <i class="fa-solid fa-cogs text-primary"></i> Configurations Sauvegardées
                     </h2>
                     <div id="sitesContainer" class="space-y-3 max-h-96 overflow-y-auto pr-2">
                         <!-- Les configurations sauvegardées seront injectées ici -->
+                    </div>
+                </div>
+
+                <!-- Panel Progression des Jobs -->
+                <div class="glass-panel p-6 rounded-lg shadow-2xl">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-hourglass-end text-yellow-400 spinner"></i> Progression des Scans
+                    </h2>
+                    <div id="jobsStatsContainer" class="grid grid-cols-2 gap-2 mb-4 text-sm">
+                        <div class="p-2 bg-blue-500/10 rounded">
+                            <div class="text-blue-400 font-bold"><i class="fa-solid fa-play"></i> <span id="statsActive">0</span></div>
+                            <div class="text-gray-500 text-xs">En cours</div>
+                        </div>
+                        <div class="p-2 bg-yellow-500/10 rounded">
+                            <div class="text-yellow-400 font-bold"><i class="fa-solid fa-list"></i> <span id="statsWaiting">0</span></div>
+                            <div class="text-gray-500 text-xs">En attente</div>
+                        </div>
+                        <div class="p-2 bg-green-500/10 rounded">
+                            <div class="text-green-400 font-bold"><i class="fa-solid fa-check"></i> <span id="statsCompleted">0</span></div>
+                            <div class="text-gray-500 text-xs">Complétés</div>
+                        </div>
+                        <div class="p-2 bg-red-500/10 rounded">
+                            <div class="text-red-400 font-bold"><i class="fa-solid fa-times"></i> <span id="statsFailed">0</span></div>
+                            <div class="text-gray-500 text-xs">Échoués</div>
+                        </div>
+                    </div>
+                    <div id="jobsContainer" class="space-y-2 max-h-64 overflow-y-auto pr-2">
+                        <p class="text-center text-gray-500 text-sm">Aucun scan en cours</p>
                     </div>
                 </div>
             </aside>
@@ -130,6 +205,7 @@
         const addSchemaFieldBtn = document.getElementById('addSchemaFieldBtn');
         const exportBtn = document.getElementById('exportBtn');
         const sitesContainer = document.getElementById('sitesContainer');
+        const jobsContainer = document.getElementById('jobsContainer');
         let allResults = [];
 
         // --- GESTION DES EVENEMENTS ---
@@ -286,6 +362,91 @@
             }
         }
 
+        
+        // --- FONCTIONS DE PROGRESSION EN DIRECT ---
+        async function fetchJobs() {
+            try {
+                const res = await fetch('/api/jobs');
+                const jobsData = await res.json();
+                
+                // Mise à jour des stats
+                document.getElementById('statsActive').textContent = jobsData.active;
+                document.getElementById('statsWaiting').textContent = jobsData.waiting;
+                document.getElementById('statsCompleted').textContent = jobsData.completed;
+                document.getElementById('statsFailed').textContent = jobsData.failed;
+                
+                // Rendu des jobs en cours
+                renderJobs(jobsData);
+            } catch (err) {
+                console.error("Erreur récupération des jobs:", err);
+            }
+        }
+
+        function renderJobs(jobsData) {
+            const container = document.getElementById('jobsContainer');
+            
+            if (jobsData.active === 0 && jobsData.waiting === 0) {
+                container.innerHTML = `<p class="text-center text-gray-500 text-sm">Aucun scan en cours</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            // Jobs actifs
+            if (jobsData.activeJobs && jobsData.activeJobs.length > 0) {
+                jobsData.activeJobs.forEach(job => {
+                    const card = document.createElement('div');
+                    card.className = 'job-active glass-panel p-3 rounded-lg text-sm';
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start gap-2">
+                            <div class="flex-grow">
+                                <div class="font-semibold text-blue-300 flex items-center gap-2">
+                                    <i class="fa-solid fa-spinner spinner"></i> 
+                                    ${job.source || 'Scan'}
+                                </div>
+                                <div class="text-gray-400 text-xs truncate mt-1">${job.url}</div>
+                                <div class="text-gray-500 text-xs mt-1">Profondeur: ${job.depth}/2</div>
+                            </div>
+                            <span class="badge-pulse badge-active">
+                                <i class="fa-solid fa-play"></i> Actif
+                            </span>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            // Jobs en attente
+            if (jobsData.waitingJobs && jobsData.waitingJobs.length > 0) {
+                jobsData.waitingJobs.slice(0, 3).forEach(job => {
+                    const card = document.createElement('div');
+                    card.className = 'job-waiting glass-panel p-3 rounded-lg text-sm';
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start gap-2">
+                            <div class="flex-grow">
+                                <div class="font-semibold text-yellow-300 flex items-center gap-2">
+                                    <i class="fa-solid fa-hourglass-end"></i> 
+                                    ${job.source || 'Scan'}
+                                </div>
+                                <div class="text-gray-400 text-xs truncate mt-1">${job.url}</div>
+                            </div>
+                            <span class="badge-pulse badge-waiting">
+                                <i class="fa-solid fa-list"></i> En attente
+                            </span>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+                
+                if (jobsData.waitingJobs.length > 3) {
+                    const more = document.createElement('div');
+                    more.className = 'p-2 text-center text-gray-500 text-xs';
+                    more.innerHTML = `+${jobsData.waitingJobs.length - 3} en attente`;
+                    container.appendChild(more);
+                }
+            }
+        }
+
         async function fetchResults() {
             try {
                 const res = await fetch(`/api/results`);
@@ -301,6 +462,7 @@
                 console.error("Erreur de récupération des résultats:", err);
             }
         }
+
 
         function renderResults(data) {
             const container = document.getElementById('resultsContainer');
@@ -371,7 +533,9 @@
         // --- INITIALISATION ---
         fetchResults();
         fetchSites();
+        fetchJobs();
         setInterval(fetchResults, 5000);
+        setInterval(fetchJobs, 2000);  // Mise à jour rapide des jobs toutes les 2 secondes
 
     </script>
 </body>

@@ -29,18 +29,25 @@ export async function writeResult(job) {
   }
 
   try {
-    // 2. Lire le fichier existant ou le créer
+    // 2. Lire le fichier existant ou le créer (avec backup si corrompu)
     let data = [];
     try {
       const content = await fs.readFile(FILE_PATH, "utf-8");
-      if (content.trim()) { // S'assurer que le fichier n'est pas vide
+      if (content.trim()) {
+        try {
           data = JSON.parse(content);
+        } catch (parseErr) {
+          const backupName = `${FILE_PATH}.bak.${Date.now()}.json`;
+          await fs.writeFile(backupName, content);
+          console.error(`Fichier résultats corrompu, backup créé: ${backupName}. Réinitialisation.`);
+          data = [];
+          await fs.writeFile(FILE_PATH, JSON.stringify(data, null, 2));
+        }
       }
     } catch (e) {
-      if (e.code !== 'ENOENT') { // Ignorer si le fichier n'existe pas, mais logguer les autres erreurs
-          console.error(`Erreur en lisant ${FILE_PATH}:`, e);
+      if (e.code !== 'ENOENT') {
+        console.error(`Erreur en lisant ${FILE_PATH}:`, e);
       }
-      // Si le fichier n'existe pas ou est corrompu/vide, on commence avec un tableau vide.
       data = [];
     }
 

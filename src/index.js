@@ -10,15 +10,99 @@ import './queue/worker.js';
 const PORT = process.env.PORT || 3000;
 const RESULTS_PATH = "./data/results.json";
 const SITES_CONFIG_PATH = "./data/sites.json";
+const LOGS_PATH = "./data/logs.json";
 
 // --- Helpers ---
+// Supprime proprement les commentaires sans casser les chaînes (préserve https://)
+const stripJsonCommentsSafe = (input) => {
+    let output = '';
+    let inString = false;
+    let stringChar = null; // '"' ou "'"
+    let escaped = false;
+    let inSingleLineComment = false;
+    let inMultiLineComment = false;
+
+    for (let i = 0; i < input.length; i++) {
+        const char = input[i];
+        const next = i + 1 < input.length ? input[i + 1] : '';
+
+        if (inSingleLineComment) {
+            if (char === '\n') {
+                inSingleLineComment = false;
+                output += char;
+            }
+            continue;
+        }
+
+        if (inMultiLineComment) {
+            if (char === '*' && next === '/') {
+                inMultiLineComment = false;
+                i++; // skip '/'
+            }
+            continue;
+        }
+
+        if (inString) {
+            output += char;
+            if (!escaped && char === stringChar) {
+                inString = false;
+                stringChar = null;
+            }
+            escaped = !escaped && char === '\\';
+            if (escaped && char !== '\\') {
+                escaped = false;
+            }
+            continue;
+        }
+
+        // Détection des commentaires uniquement hors chaîne
+        if (char === '/' && next === '/') {
+            inSingleLineComment = true;
+            i++; // skip second '/'
+            continue;
+        }
+        if (char === '/' && next === '*') {
+            inMultiLineComment = true;
+            i++; // skip '*'
+            continue;
+        }
+
+        // Entrée dans une chaîne
+        if (char === '"' || char === "'") {
+            inString = true;
+            stringChar = char;
+            output += char;
+            escaped = false;
+            continue;
+        }
+
+        output += char;
+    }
+
+    return output;
+};
 const readJsonFile = async (path, defaultData = []) => {
     try {
         const fileContent = await fs.readFile(path, 'utf-8');
-        const cleanedContent = fileContent.replace(/\/\/.*$|\/\*[\s\S]*?\*\//gm, '');
+        const cleanedContent = stripJsonCommentsSafe(fileContent);
         if (cleanedContent.trim() === '') return defaultData;
         return JSON.parse(cleanedContent);
     } catch (error) {
+        // Sauvegarde automatique en cas de JSON corrompu
+        if (error instanceof SyntaxError || error.name === 'SyntaxError') {
+            try {
+                const raw = await fs.readFile(path, 'utf-8').catch(() => null);
+                const backupName = `${path}.bak.${Date.now()}.json`;
+                if (raw !== null && raw !== undefined) {
+                    await fs.writeFile(backupName, raw);
+                }
+                await fs.writeFile(path, JSON.stringify(defaultData, null, 2));
+                console.error(`Fichier JSON corrompu détecté et sauvegardé: ${backupName}. Réinitialisation avec des valeurs par défaut.`);
+            } catch (e) {
+                console.error(`Échec de la réparation automatique de ${path}:`, e);
+            }
+            return defaultData;
+        }
         if (error.code === 'ENOENT') {
             await fs.writeFile(path, JSON.stringify(defaultData, null, 2));
             return defaultData;
@@ -67,6 +151,45 @@ app.get('/api/sites', async (req, res) => {
     }
 });
 
+// GET /api/jobs - Retourne les jobs en cours et la queue
+app.get('/api/jobs', async (req, res) => {
+    try {
+        const active = await crawlQueue.getActiveCount();
+        const waiting = await crawlQueue.getWaitingCount();
+        const completed = await crawlQueue.getCompletedCount();
+        const failed = await crawlQueue.getFailedCount();
+
+        // Utiliser getJobs(state, start, end) pour BullMQ v5
+        const activeJobs = await crawlQueue.getJobs('active', 0, 99);
+        const waitingJobs = await crawlQueue.getJobs('waiting', 0, 49);
+
+        res.json({
+            active,
+            waiting,
+            completed,
+            failed,
+            activeJobs: activeJobs.map(job => ({
+                id: job.id,
+                name: job.name,
+                source: job.data?.source || 'Unknown',
+                url: job.data?.url || '',
+                depth: job.data?.depth || 0,
+                status: 'active'
+            })),
+            waitingJobs: waitingJobs.map(job => ({
+                id: job.id,
+                name: job.name,
+                source: job.data?.source || 'Unknown',
+                url: job.data?.url || '',
+                status: 'waiting'
+            }))
+        });
+    } catch (error) {
+        console.error("Erreur lors de la récupération des jobs:", error);
+        res.status(500).json({ message: "Erreur serveur." });
+    }
+});
+
 // POST /api/scan - Lancer un nouveau scan et/ou sauvegarder une config (AVEC SANITIZATION)
 app.post('/api/scan', async (req, res) => {
     const { url, name, schema, saveConfig } = req.body;
@@ -93,6 +216,14 @@ app.post('/api/scan', async (req, res) => {
 
     if (!sanitizedUrl || !sanitizedName) {
         return res.status(400).json({ message: "L'URL et le Nom du projet sont requis." });
+    }
+
+    // Validation stricte de l'URL
+    try {
+        // Utilise l'URL globale (Node.js) pour valider le format
+        new URL(sanitizedUrl);
+    } catch {
+        return res.status(400).json({ message: "URL invalide. Veuillez saisir une URL complète (ex: https://example.com)." });
     }
 
     if (saveConfig) {
@@ -124,7 +255,8 @@ app.post('/api/scan', async (req, res) => {
         }, {
             jobId: safeJobId,
             attempts: 2,
-            backoff: 5000
+            backoff: 5000,
+            removeOnComplete: true
         });
 
         console.log(`✅ Nouveau scan ajouté pour : ${sanitizedName} (${sanitizedUrl})`);
@@ -202,3 +334,16 @@ app.listen(PORT, () => {
     console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
     console.log(`📊 Dashboard BullMQ disponible sur http://localhost:${PORT}/admin/queues`);
 });
+
+// --- Préflight: valider/réparer les JSON de données au démarrage ---
+(async () => {
+    try {
+        await Promise.all([
+            readJsonFile(SITES_CONFIG_PATH, []),
+            readJsonFile(RESULTS_PATH, []),
+            readJsonFile(LOGS_PATH, [])
+        ]);
+    } catch {
+        // silencieux: readJsonFile gère déjà la réparation/log
+    }
+})();

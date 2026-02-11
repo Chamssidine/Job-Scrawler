@@ -1,9 +1,9 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
-import puppeteer from "puppeteer";
 import { extractSignals } from "./extract.js";
 import { filterUrlsWithAI } from "./urlFilter.js";
 import { URL } from "url";
+import { withPage } from "./browser.js";
 
 export async function crawlPage(url) {
   let baseDomain;
@@ -14,7 +14,6 @@ export async function crawlPage(url) {
   }
 
   let finalData = null;
-  let browser = null; // Déclarer le navigateur ici pour pouvoir le fermer en cas d'erreur
 
   /* =====================
      1️⃣ Tentative Axios (Rapide)
@@ -50,47 +49,39 @@ export async function crawlPage(url) {
      ===================== */
   if (!finalData) {
     try {
-      browser = await puppeteer.launch({
-        headless: "new",
-        args: ["--no-sandbox", "--disable-setuid-sandbox"]
-      });
-      const page = await browser.newPage();
+      finalData = await withPage(async (page) => {
+        // Navigation avec retry simple pour "Execution context was destroyed"
+        const nav = async () => {
+          try {
+            await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
+            await page.waitForSelector('body', { timeout: 15000 });
+          } catch (e) {
+            if ((e.message || '').includes('Execution context was destroyed')) {
+              // Retenter une fois
+              await page.waitForTimeout(1000);
+              await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
+              await page.waitForSelector('body', { timeout: 15000 });
+            } else {
+              throw e;
+            }
+          }
+        };
+        await nav();
 
-      // --- DÉGUISENENT DU ROBOT ---
-      await page.setUserAgent(
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
-      );
-      // --------------------------
-
-      await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
-      
-      finalData = await page.evaluate(() => {
-        const EMAIL_REGEX = /[A-Z0-9._%+-]+(?:\s?\[at\]\s?|\s?\(at\)\s?|@)[A-Z0-9.-]+\.[A-Z]{2,}/gi;
-        const text = document.body.innerText || "";
-        
-        const rawEmails = text.match(EMAIL_REGEX) || [];
-        const emails = [...new Set(rawEmails.map(e => 
-          e.replace(/\[at\]|\(at\)/gi, "@").replace(/\s/g, "").toLowerCase()
-        ))];
-        
-        let hasForm = false;
-        document.querySelectorAll("form").forEach(f => {
-          if (f.innerText.match(/bewerb|upload|cv|apply|senden|datei|lebenslauf/i)) hasForm = true;
+        const data = await page.evaluate(() => {
+          const EMAIL_REGEX = /[A-Z0-9._%+-]+(?:\s?\[at\]\s?|\s?\(at\)\s?|@)[A-Z0-9.-]+\.[A-Z]{2,}/gi;
+          const text = document.body.innerText || "";
+          const rawEmails = text.match(EMAIL_REGEX) || [];
+          const emails = [...new Set(rawEmails.map(e => e.replace(/\[at\]|\(at\)/gi, "@").replace(/\s/g, "").toLowerCase()))];
+          let hasForm = false;
+          document.querySelectorAll("form").forEach(f => { if (f.innerText.match(/bewerb|upload|cv|apply|senden|datei|lebenslauf/i)) hasForm = true; });
+          const links = Array.from(document.querySelectorAll("a")).map(a => a.href).filter(h => h && h.startsWith(window.location.origin));
+          return { text, emails, hasForm, links };
         });
-
-        const links = Array.from(document.querySelectorAll("a"))
-          .map(a => a.href)
-          .filter(h => h && h.startsWith(window.location.origin));
-
-        return { text, emails, hasForm, links };
+        return data;
       });
-
-      await browser.close();
-      browser = null; // Réinitialiser après fermeture réussie
-
     } catch (err) {
       console.error(`Erreur critique Puppeteer sur ${url}:`, err.message);
-      if (browser) await browser.close(); // S'assurer de fermer le navigateur même en cas d'erreur
       return null;
     }
   }

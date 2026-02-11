@@ -18,13 +18,21 @@ const worker = new Worker('job-crawler', async (job) => {
   // Propagation du schéma aux enfants (liens suivis)
   if (page.links && depth < maxDepth) {
     for (const link of page.links) {
-      await crawlQueue.add('crawl-link', {
-        url: link,
-        depth: depth + 1,
-        source,
-        maxDepth,
-        schema: schema // On transmet le schéma aux enfants
-      }, { attempts: 2 });
+      try {
+        await crawlQueue.add('crawl-link', {
+          url: link,
+          depth: depth + 1,
+          source,
+          maxDepth,
+          schema: schema // On transmet le schéma aux enfants
+        }, {
+          jobId: link, // Déduplication simple basée sur l'URL
+          attempts: 2,
+          removeOnComplete: true
+        });
+      } catch (e) {
+        // Si job déjà existant (même jobId), on ignore calmement
+      }
     }
   }
 
@@ -51,6 +59,11 @@ const worker = new Worker('job-crawler', async (job) => {
 
   return { status: 'completed', url: page.url, decision: decision.type };
 
-}, { connection, concurrency: 5 });
+}, { 
+  connection, 
+  concurrency: 5,
+  // Limiteur global: au plus 10 jobs traités par seconde
+  limiter: { max: 10, duration: 1000 }
+});
 
 export default worker;
