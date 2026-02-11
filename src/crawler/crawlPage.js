@@ -96,10 +96,14 @@ export async function crawlPage(url) {
   console.log(`📄 Données extraites: ${finalData.text?.length || 0} chars, ${finalData.emails?.length || 0} emails, ${finalData.links?.length || 0} liens`);
 
   if (finalData && finalData.links) {
+    const noiseQuery = /(tx_bafzacookiebar|CookieWarning|closeCookieBar|cHash=|type=\d+)/i;
     const cleanLinks = [...new Set(finalData.links)].filter(link => {
       if (!link || !link.startsWith("http") || link.includes("#")) return false;
-      const bullshit = /impressum|datenschutz|privacy|contact|kontakt|presse|login|newsletter/i;
-      return !bullshit.test(link);
+      // Écarter liens évidents non pertinents
+      const blacklist = /impressum|datenschutz|privacy|kontakt|contact|presse|login|newsletter|agb|sitemap|facebook|twitter|instagram|linkedin|\.pdf$/i;
+      if (blacklist.test(link)) return false;
+      if (noiseQuery.test(link)) return false;
+      return true;
     });
 
     if (cleanLinks.length > 0) {

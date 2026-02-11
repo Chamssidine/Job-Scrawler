@@ -16,5 +16,15 @@
     "name": "FSJ plazt",
     "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/",
     "schema": null
+  },
+  {
+    "name": "FSJ-Freiwillige",
+    "url": "https://freiwillig-ja.de/stellensuche?ort%5Bsource_configuration%5D%5Borigin_address%5D=&ort%5Bvalue%5D=10&dienst%5B3%5D=3&dienst%5B2%5D=2&dienst%5B4%5D=4&taetigkeiten%5B51%5D=51&taetigkeiten%5B14%5D=14&taetigkeiten%5B17%5D=17&taetigkeiten%5B13%5D=13&taetigkeiten%5B8%5D=8&taetigkeiten%5B21%5D=21&taetigkeiten%5B5%5D=5&taetigkeiten%5B16%5D=16&taetigkeiten%5B12%5D=12&taetigkeiten%5B20%5D=20&taetigkeiten%5B18%5D=18&taetigkeiten%5B15%5D=15&taetigkeiten%5B19%5D=19&taetigkeiten%5B6%5D=6&taetigkeiten%5B10%5D=10&taetigkeiten%5B11%5D=11&taetigkeiten%5B50%5D=50&taetigkeiten%5B9%5D=9&taetigkeiten%5B48%5D=48&taetigkeiten%5B49%5D=49&taetigkeiten%5B52%5D=52&fuehrerschein=0&unterkunft=1&items_per_page=50",
+    "schema": {
+      "email": "email de l'entreprise",
+      "nom": "nom de l'entreprise",
+      "description": "description du poste",
+      "location": "lieu ou pays"
+    }
   }
 ]

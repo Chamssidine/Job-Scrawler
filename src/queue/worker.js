@@ -5,6 +5,7 @@ import { crawlPage } from '../crawler/crawlPage.js';
 import { agentStep } from '../agent/orchestrator.js';
 import { generateSystemPrompt } from '../agent/prompt.js'; // Importer la nouvelle fonction
 import computeScore from '../core/scoring.js';
+import { writeResult } from '../storage/writeResult.js';
 
 const worker = new Worker('job-crawler', async (job) => {
   const { url, depth, source, maxDepth, schema } = job.data;
@@ -53,25 +54,22 @@ const worker = new Worker('job-crawler', async (job) => {
   const analyzePage = async (pg) => {
     const scoring = computeScore(pg);
     const currentSystemPrompt = generateSystemPrompt(schema);
-    return await agentStep(
+    const decision = await agentStep(
       state,
       [
         { role: "system", content: currentSystemPrompt },
         {
           role: "user",
-          content: JSON.stringify({
-            action: "ANALYZE_PAGE",
-            page: { ...pg, links: "[Filtered]" },
-            scoring
-          })
+          content: JSON.stringify({ action: "ANALYZE_PAGE", page: { ...pg, links: "[Filtered]" }, scoring })
         }
       ],
       schema,
       { allowCrawlTool: false }
     );
+    return { decision, scoring, analyzedPage: pg };
   };
 
-  let decision = await analyzePage(page);
+  let { decision, scoring: lastScoring, analyzedPage: currentPage } = await analyzePage(page);
 
   // Si l'IA demande un crawl supplémentaire, on l'exécute puis on réanalyse la page crawlée
   let safety = 0;
@@ -89,12 +87,12 @@ const worker = new Worker('job-crawler', async (job) => {
             source,
             maxDepth,
             schema
-          }, { jobId: link, attempts: 2, removeOnComplete: true });
+          }, { jobId: buildJobId(link, source, depth + 1), attempts: 2, removeOnComplete: true });
         } catch {}
       }
     }
 
-    decision = await analyzePage(crawled);
+    ({ decision, scoring: lastScoring, analyzedPage: currentPage } = await analyzePage(crawled));
     safety++;
   }
 
@@ -110,6 +108,9 @@ const worker = new Worker('job-crawler', async (job) => {
     }
   } else if (decision && decision.type === 'DONE') {
     console.log(`\x1b[32m[✅ Résultat sauvegardé]\x1b[0m ${page.url}`);
+    try {
+      await writeResult({ url: currentPage?.url || page.url, score: lastScoring?.score, reasons: lastScoring?.reasons });
+    } catch {}
   } else if (decision && decision.type === 'DECISION') {
     console.log(`\x1b[33m[⚠️ Décision IA: ${decision.decision}]\x1b[0m ${decision.reason || ''}`);
     if (decision.decision === 'FOLLOW') {

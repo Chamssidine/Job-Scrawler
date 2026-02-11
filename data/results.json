@@ -76,5 +76,356 @@
     "organization": "Erinnerungsort Badehaus",
     "email": "info@erinnerungsort-badehaus.de",
     "extracted_at": "2026-02-11T07:25:22.082Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1045967/medius-kliniken-ggmbh-medius-klinik-kirchheim",
+    "email": "",
+    "nom": "medius Kliniken gGmbH",
+    "description": "Dienstarten Freiwilliges Soziales Jahr Bundesfreiwilligendienst Tätigkeiten Krankenhaus Rettungsdienst, Katastrophen- & Zivilschutz Pflege",
+    "location": "Kirchheim u. Teck, Deutschland",
+    "extracted_at": "2026-02-11T07:35:15.019Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1043940/erlenhof-wohn-und-werkstaetten-fuer-behinderte-menschen",
+    "email": "",
+    "nom": "Erlenhof, Wohn- und Werkstätten für behinderte Menschen",
+    "description": "Freiwilliges Soziales Jahr auprès de personnes avec handicap.",
+    "location": "Aukrug, Deutschland",
+    "title": "Freiwilliges Soziales Jahr",
+    "organization": "Diakonisches Werk Schleswig-Holstein",
+    "extracted_at": "2026-02-11T07:35:17.921Z",
+    "score": 35,
+    "reasons": [
+      "Aucun formulaire de candidature",
+      "Aucune restriction géographique détectée"
+    ],
+    "updated_at": "2026-02-11T07:35:17.931Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1045153/evangelische-heimstiftung-gmbh-stephanuswerk-isny",
+    "email": "",
+    "nom": "Evangelische Heimstiftung GmbH Stephanuswerk Isny",
+    "description": "",
+    "location": "Isny im Allgäu, Deutschland",
+    "extracted_at": "2026-02-11T07:35:18.622Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/773899/jugendherberge-schweinfurt",
+    "email": "",
+    "nom": "Jugendherberge Schweinfurt",
+    "description": "Direkt zum Inhalt Jugendherberge Schweinfurt Home Teilen Teilen Tweet Senden Empfehlen In den Jugendherbergen erwarten dich in einem oder mehrerer der folgenden Bereiche abwechslungsreiche Aufgaben, wodurch du das Team vor Ort unterstützen kannst und mit verschiedenen Gästegruppen in Kontakt kommst: Rezeption, Gästebetreuung, Haustechnik, Hauswirtschaftlicher Bereich, Versorgung und Küche.",
+    "location": "Schweinfurt, Deutschland",
+    "extracted_at": "2026-02-11T07:35:21.753Z",
+    "score": 35,
+    "reasons": [
+      "Aucun formulaire de candidature",
+      "Aucune restriction géographique détectée"
+    ],
+    "updated_at": "2026-02-11T07:35:21.758Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/941788/cts-klinik-schlossberg-pflege",
+    "email": "",
+    "nom": "cts-Klinik Schlossberg - Pflege",
+    "description": "Freiwilliges Soziales Jahr dans une clinique, travaillant sur des activités dans un cadre hospitalier.",
+    "location": "75378 Bad Liebenzell, Deutschland",
+    "organization": "cts-Klinik Schlossberg - Pflege",
+    "extracted_at": "2026-02-11T07:35:22.734Z",
+    "title": "Freiwilliges Soziales Jahr",
+    "updated_at": "2026-02-11T07:36:22.294Z",
+    "score": 35,
+    "reasons": [
+      "Aucun formulaire de candidature",
+      "Aucune restriction géographique détectée"
+    ]
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1046877/die-zieglerschen-sued-gem-gmbh-geschaeftsbereich-behindertenhilfe-neuland",
+    "email": "",
+    "nom": "Die Zieglerschen - Süd - gem. GmbH",
+    "description": "Geschäftsbereich Behindertenhilfe Neuland Werkstätten Wilhelmsdorf",
+    "location": "Wilhelmsdorf, Deutschland",
+    "extracted_at": "2026-02-11T07:35:22.977Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/941525/cts-klinik-stoeckenhoefe-patientenservice",
+    "email": "ed.ketterer@cts-klinik.de",
+    "nom": "cts Klinik Stöckenhöfe - Patientenservice",
+    "description": "Freiwilliges Soziales Jahr Tätigkeiten Krankenhaus",
+    "location": "79299 Wittnau Deutschland",
+    "extracted_at": "2026-02-11T07:35:23.706Z",
+    "score": 35,
+    "reasons": [
+      "Aucun formulaire de candidature",
+      "Aucune restriction géographique détectée"
+    ],
+    "updated_at": "2026-02-11T07:36:22.205Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1050759/diakonie-stetten-ev-kommunaler-wohnverbund-fellbach-gb-leben-wohnen",
+    "email": "",
+    "nom": "Diakonie Stetten e.V.",
+    "description": "Freiwilliges Soziales Jahr pour des personnes avec handicap.",
+    "location": "Fellbach, Deutschland",
+    "title": "Freiwilliges Soziales Jahr",
+    "organization": "Diakonisches Werk Württemberg",
+    "extracted_at": "2026-02-11T07:35:23.788Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/483915/st-josef-dwg-nauheimer-strasse-st-josef-ggmbh",
+    "email": "",
+    "nom": "St. Josef - DWG Nauheimer Straße St. Josef gGmbH",
+    "description": "Hauswirtschaftliche Tätigkeiten und Unterstützung im Alltag, Mitarbeit in der pädagogischen Betreuung in Einzel- und Gruppensettings, Hol- und Bringdienst für jüngere Kinder, Beschäftigung und Freizeitgestaltung der Bewohner/innen",
+    "location": "Stuttgart, Deutschland",
+    "extracted_at": "2026-02-11T07:35:25.536Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1048144/mariaberg-e-v-wohnen-erwachsene",
+    "email": "",
+    "nom": "Mariaberg e. V. Wohnen Erwachsene",
+    "description": "Freiwilliges Soziales Jahr Bundesfreiwilligendienst Tätigkeiten Menschen mit Behinderung",
+    "location": "Gammertingen, Deutschland",
+    "extracted_at": "2026-02-11T07:35:25.745Z",
+    "score": 35,
+    "reasons": [
+      "Aucun formulaire de candidature",
+      "Aucune restriction géographique détectée"
+    ],
+    "updated_at": "2026-02-11T07:35:25.747Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/732536/bischoefliche-stiftung-haus-hall-bereich-wohnen",
+    "email": "",
+    "nom": "Bischöfliche Stiftung Haus Hall Bereich Wohnen",
+    "description": "Seniorinnen & Senioren, Menschen mit Behinderung",
+    "location": "Gescher, Deutschland",
+    "extracted_at": "2026-02-11T07:35:26.418Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1048110/bruderhausdiakonie-behindertenhilfe-reutlingen-unterstuetzungszentrum",
+    "email": "",
+    "nom": "BruderhausDiakonie Behindertenhilfe Reutlingen Unterstützungszentrum",
+    "description": "Freiwilliges Soziales Jahr Bundesfreiwilligendienst Tätigkeiten Menschen mit Behinderung",
+    "location": "Reutlingen, Deutschland",
+    "extracted_at": "2026-02-11T07:35:27.287Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/477505/maselheim-st-elisabeth-stiftung-heggbacher-wohnverbund-wohnen-heggbach",
+    "email": "n/a",
+    "nom": "St. Elisabeth-Stiftung Heggbacher Wohnverbund Wohnen Heggbach",
+    "description": "Freiwilliges Soziales Jahr, Tätigkeiten : Menschen mit Behinderung",
+    "location": "Maselheim, Allemagne",
+    "extracted_at": "2026-02-11T07:35:28.078Z",
+    "updated_at": "2026-02-11T07:36:26.374Z",
+    "score": 35,
+    "reasons": [
+      "Aucun formulaire de candidature",
+      "Aucune restriction géographique détectée"
+    ]
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1045091/die-zieglerschen-sued-gem-gmbh-geschaeftsbereich-behindertenhilfe-sbbz",
+    "email": "",
+    "nom": "Die Zieglerschen - Süd - gem. GmbH",
+    "description": "Freiwilliges Soziales Jahr",
+    "location": "Horgenzell, Deutschland",
+    "extracted_at": "2026-02-11T07:35:28.816Z",
+    "score": 35,
+    "reasons": [
+      "Aucun formulaire de candidature",
+      "Aucune restriction géographique détectée"
+    ],
+    "updated_at": "2026-02-11T07:35:41.231Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1045963/medius-kliniken-ggmbh-medius-klinik-kirchheim",
+    "email": "",
+    "nom": "medius Kliniken gGmbH",
+    "description": "Le poste est lié à Freiwilliges Soziales Jahr et Bundesfreiwilligendienst dans le domaine de l'hôpital, du service ambulancier et de la protection civile.",
+    "location": "Kirchheim u. Teck, Deutschland",
+    "title": "Medius Klinik Kirchheim",
+    "organization": "medius Kliniken gGmbH",
+    "extracted_at": "2026-02-11T07:35:30.325Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/733379/alexianer-johannisstift-evk-muenster",
+    "email": "",
+    "nom": "Alexianer Johannisstift EVK Münster",
+    "description": "Betreuung und Begleitung der Patienten bei den Anforderungen du täglichen Lebens.",
+    "location": "Münster, Deutschland",
+    "title": "Betreuung und Begleitung",
+    "extracted_at": "2026-02-11T07:35:30.553Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/589202/markdorf-gemeindeintegriertes-wohnen-markdorf-liebenau-teilhabe",
+    "email": "",
+    "nom": "Gemeindeintegriertes Wohnen Markdorf Liebenau Teilhabe gemeinnützige GmbH",
+    "description": "Freiwilliges Soziales Jahr avec des tâches pour des personnes en situation de handicap.",
+    "location": "Markdorf, Deutschland",
+    "extracted_at": "2026-02-11T07:35:30.598Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1050535/fsj-bfd-bei-jumpers-jugend-mit-perspektive-stadtallendorf-deinjahrorg",
+    "email": "",
+    "nom": "Jumpers - Jugend mit Perspektive gGmbH - Stadtallendorf",
+    "description": "FSJ/ BFD bei Jumpers - Jugend mit Perspektive. Freiwillige bringen sich aktiv dans la Arbeit von Jumpers mit ein. Dazu gehört den Menschen, insbesondere Kindern, Jugendlichen und deren Eltern, vor Ort zuzuhören, sie wertzuschätzen und ihre Anliegen zu sortieren.",
+    "location": "Stadtallendorf, Allemagne",
+    "title": "FSJ/ BFD bei Jumpers",
+    "extracted_at": "2026-02-11T07:35:30.922Z",
+    "score": 35,
+    "reasons": [
+      "Aucun formulaire de candidature",
+      "Aucune restriction géographique détectée"
+    ],
+    "updated_at": "2026-02-11T07:36:29.999Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1048681/die-zieglerschen-nord-gem-gmbh-geschaeftsbereich-hoer-sprachzentrum",
+    "email": "",
+    "nom": "Die Zieglerschen - Nord - gem. GmbH Geschäftsbereich Hör-Sprachzentrum Leopoldschule Altshausen",
+    "description": "",
+    "location": "Altshausen, Allemagne",
+    "extracted_at": "2026-02-11T07:35:31.580Z",
+    "updated_at": "2026-02-11T07:36:30.852Z",
+    "score": 35,
+    "reasons": [
+      "Aucun formulaire de candidature",
+      "Aucune restriction géographique détectée"
+    ]
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/634848/schulkindergarten-johanna-weiss-im-heilpaedagogischen-zentrum",
+    "email": "",
+    "nom": "Schulkindergarten Johanna Weiß im Heilpädagogischen Zentrum",
+    "description": "Freiwilliges Soziales Jahr dans le domaine de l'éducation dans un kindergarten pour les personnes avec handicap.",
+    "location": "Pforzheim, Deutschland",
+    "extracted_at": "2026-02-11T07:35:32.336Z",
+    "updated_at": "2026-02-11T07:36:29.598Z",
+    "score": 35,
+    "reasons": [
+      "Aucun formulaire de candidature",
+      "Aucune restriction géographique détectée"
+    ]
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/582632/bruchsal-sozialpaedagogische-wohngemeinschaften-bruchsal-reha-suedwest-ggmbh",
+    "email": "contact@reha-suedwest.de",
+    "nom": "Reha-Südwest gGmbH",
+    "description": "Wohngemeinschaft für Erwachsene - Sozialpädagogische Wohngemeinschaften Bruchsal",
+    "location": "Bruchsal, Deutschland",
+    "extracted_at": "2026-02-11T07:35:33.595Z",
+    "score": 35,
+    "reasons": [
+      "Aucun formulaire de candidature",
+      "Aucune restriction géographique détectée"
+    ],
+    "updated_at": "2026-02-11T07:36:30.994Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/964096/alexianer-misericordia-gmbh-maria-ludwig-stift",
+    "email": "",
+    "nom": "Alexianer Misericordia GmbH Maria-Ludwig-Stift",
+    "description": "Freiwilliges Soziales Jahr im Bereich Pflege",
+    "location": "Dülmen, Deutschland",
+    "title": "Freiwilliges Soziales Jahr",
+    "organization": "Alexianer Misericordia GmbH Maria-Ludwig-Stift",
+    "extracted_at": "2026-02-11T07:35:35.321Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1046929/diakonie-stetten-ev-remstal-werkstaetten-waiblingen-bereich",
+    "email": "",
+    "nom": "Diakonie Stetten e.V. Remstal Werkstätten - Waiblingen Bereich",
+    "description": "Freiwilliges Soziales Jahr, Bundesfreiwilligendienst, aide aux personnes avec handicap, activités artisanales et restauration de monuments.",
+    "location": "Waiblingen/Stuttgart/Esslingen",
+    "extracted_at": "2026-02-11T07:35:35.493Z",
+    "score": 35,
+    "reasons": [
+      "Aucun formulaire de candidature",
+      "Aucune restriction géographique détectée"
+    ],
+    "updated_at": "2026-02-11T07:36:34.734Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/477503/maselheim-st-elisabeth-stiftung-heggbacher-wohnverbund-wohnen-heggbach",
+    "email": "",
+    "nom": "St. Elisabeth-Stiftung Heggbacher Wohnverbund Wohnen Heggbach",
+    "description": "Freiwilliges Soziales Jahr auprès de personnes en situation de handicap",
+    "location": "Maselheim, Allemagne",
+    "extracted_at": "2026-02-11T07:35:36.032Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1049234/fsjbfd-der-klinik-hohe-mark-deinjahrorg",
+    "email": "",
+    "nom": "Klinik Hohe Mark",
+    "description": "Der Einsatz erfolgt auf einer Station im Bereich Psychiatrie/Psychotherapie mit guter Einbindung dans le thérapeutique Team. Der Schwerpunkt der Tätigkeit liegt in der Mithilfe bei der Pflege und Betreuung psychisch kranker Menschen, sowie in Aufgaben im organisatorischen und haushaltsnahen Bereich.",
+    "location": "Oberursel, Deutschland",
+    "extracted_at": "2026-02-11T07:35:37.378Z",
+    "score": 35,
+    "reasons": [
+      "Aucun formulaire de candidature",
+      "Aucune restriction géographique détectée"
+    ],
+    "updated_at": "2026-02-11T07:35:37.381Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/634593/sbbz-sonderpaed-bildungs-und-beratungszentrum-mit-internat-foerderschwerpkt",
+    "email": "",
+    "nom": "SBBZ, Sonderpäd. Bildungs- und Beratungszentrum mit Internat. Förderschwerpkt Sehen St. Michael Waldkirch",
+    "description": "Mitarbeit et Hilfestellung bei den täglichen Unterrichtseinheiten und Lerngängen, Hilfe beim Erlernen selbständigen Essens, Pflegerische Dienste bei der Sauberkeitserziehung, Beaufsichtigung in Pausensituationen und beim freien Spiel, Mitwirkung und Betreuung beim Projektnachmittag, Kooperation mit dem Internat durch Frühdienste.",
+    "location": "Waldkirch, Deutschland",
+    "title": "SBBZ, Sonderpäd. Bildungs- und Beratungszentrum mit Internat. Förderschwerpkt Sehen",
+    "extracted_at": "2026-02-11T07:35:39.444Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1045731/diakonie-stetten-ev-kommunaler-wohnverbund-bergheim-gb-leben-wohnen",
+    "email": "",
+    "nom": "Diakonie Stetten e.V. Kommunaler Wohnverbund Bergheim GB Leben Wohnen",
+    "description": "Freiwilliges Soziales Jahr dans le secteur des personnes avec handicap.",
+    "location": "Stuttgart, Deutschland",
+    "title": "Freiwilliges Soziales Jahr",
+    "extracted_at": "2026-02-11T07:35:39.728Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1091632/jugend-kultur-und-medienwerkstatt-kino-haus-der-jugend-eckernfoerde",
+    "email": "",
+    "nom": "Jugend-, Kultur- und Medienwerkstatt & Kino Haus der Jugend Eckernförde",
+    "description": "Die Freiwilligendienstleistenden übernehmen folgende Tätigkeiten: technische und organisatorische Betreuung der Spielgeräte und des Spielablaufs (speziell Betreuung von Kindern und Jugendlichen) im Spielraum (Billard, Tischkicker), Bereitstellung der Räume für Veranstaltungen, Mitarbeit beim Ablauf der Vorstellungen des Kommunalen Kinos, technische und organisatorische Betreuung von Künstler*innen, u. a. Hilfe bei der Durc.",
+    "location": "Eckernförde, Deutschland",
+    "extracted_at": "2026-02-11T07:35:39.754Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1084283/ravensburg-oberschwabenklinik-ggmbh-st-elisabethen-klinikum",
+    "email": "",
+    "nom": "Oberschwabenklinik gGmbH St. Elisabethen-Klinikum",
+    "description": "Freiwilliges Soziales Jahr",
+    "location": "Ravensburg, Deutschland",
+    "extracted_at": "2026-02-11T07:35:43.187Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1052988/fsjbfd-im-freiwilligenteam-bei-ojc-deinjahrorg",
+    "email": "",
+    "nom": "Offensive Junger Christen - OJC e.V.",
+    "description": "Mitarbeit im Erfahrungsfeld Schloss Reichenberg (Planung und Durchführung von Aktionen mit unterschiedlichen Gästegruppen), Unterhaltsarbeiten an teilweise historischen Gebäuden und im Gelände, Pflege der Gästehäuser, Menü-Zubereitung für Gruppen, Mitarbeit in Redaktion/Internetauftritten und Versand, Gestaltung von Gottesdiensten und Feiern.",
+    "location": "64385 Reichelsheim, Deutschland",
+    "title": "FSJ/BFD im Freiwilligenteam bei OJC",
+    "extracted_at": "2026-02-11T07:36:23.916Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/1050890/diakonie-stetten-e-v-wohnhaus-ebersbach",
+    "email": "",
+    "nom": "Diakonie Stetten e. V. Wohnhaus Ebersbach",
+    "description": "Freiwilliges Soziales Jahr, Bundesfreiwilligendienst, Tätigkeiten Menschen mit Behinderung",
+    "location": "Ebersbach, Deutschland",
+    "extracted_at": "2026-02-11T07:36:24.487Z"
+  },
+  {
+    "url": "https://freiwillig-ja.de/stellenangebote/476726/calw-hirsau-klinikum-nordschwarzwald-zentrum-fuer-psychiatrie",
+    "email": "",
+    "nom": "Klinikum Nordschwarzwald Zentrum für Psychiatrie",
+    "description": "Freiwilliges Soziales Jahr",
+    "location": "Calw-Hirsau, Deutschland",
+    "title": "Freiwilliges Soziales Jahr",
+    "organization": "Klinikum Nordschwarzwald",
+    "extracted_at": "2026-02-11T07:36:32.141Z"
   }
 ]
