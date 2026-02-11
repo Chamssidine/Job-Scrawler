@@ -1,11 +1,19 @@
 [
   {
-    "name": "Amazon T-clavier",
-    "url": "https://www.amazon.fr/",
+    "name": "FSJ",
+    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/",
     "schema": null
   },
   {
-    "name": "FSJ",
+    "name": "Ausbildungsplazt",
+    "url": "https://www.ausbildung.de/",
+    "schema": {
+      "email": "email pour envoyer la candidature",
+      "Description": "Descriotion du poste de ausbi"
+    }
+  },
+  {
+    "name": "FSJ plazt",
     "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/",
     "schema": null
   }

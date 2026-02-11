@@ -124,8 +124,25 @@ const app = express();
 app.use(express.json());
 app.use(express.static('public'));
 
+// --- Basic request logger to trace incoming API calls ---
+app.use((req, _res, next) => {
+    const ts = new Date().toISOString();
+    console.log(`[${ts}] ${req.method} ${req.url}`);
+    next();
+});
+
 // --- BullMQ Dashboard ---
 setupBullBoard(app);
+// Health check (Redis + app)
+import { connection as redisConn } from './queue/setup.js';
+app.get('/api/health', async (_req, res) => {
+    try {
+        const pong = await redisConn.ping();
+        res.json({ status: 'ok', redis: pong });
+    } catch (e) {
+        res.status(500).json({ status: 'error', redis: e?.message || 'unknown' });
+    }
+});
 
 // --- API Routes ---
 
@@ -194,6 +211,8 @@ app.get('/api/jobs', async (req, res) => {
 app.post('/api/scan', async (req, res) => {
     const { url, name, schema, saveConfig } = req.body;
 
+    console.log(`[SCAN] received: name=${name || ''} url=${url || ''} saveConfig=${!!saveConfig}`);
+
     // --- SANITIZATION ---
     const sanitizedName = name ? sanitizeString(name) : "";
     const sanitizedUrl = url ? sanitizeString(url) : "";
@@ -245,7 +264,7 @@ app.post('/api/scan', async (req, res) => {
     }
 
     try {
-        const safeJobId = `scan:${sanitizedName.replace(/[^a-zA-Z0-9]/g, '-')}:${Date.now()}`;
+        const safeJobId = `scan-${sanitizedName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`;
         await crawlQueue.add('crawl-job', { 
             url: sanitizedUrl, 
             source: sanitizedName, 
@@ -263,7 +282,7 @@ app.post('/api/scan', async (req, res) => {
         res.status(202).json({ message: "Scan ajouté à la file d'attente." });
 
     } catch (error) {
-        console.error("Erreur lors de l'ajout du scan:", error);
+        console.error("Erreur lors de l'ajout du scan:", error?.message || error);
         res.status(500).json({ message: "Erreur lors de l'ajout du scan." });
     }
 });
@@ -333,6 +352,14 @@ app.get('/api/export', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
     console.log(`📊 Dashboard BullMQ disponible sur http://localhost:${PORT}/admin/queues`);
+});
+
+// Global unhandled errors
+process.on('unhandledRejection', (reason) => {
+    console.error('UnhandledRejection:', reason);
+});
+process.on('uncaughtException', (err) => {
+    console.error('UncaughtException:', err);
 });
 
 // --- Préflight: valider/réparer les JSON de données au démarrage ---

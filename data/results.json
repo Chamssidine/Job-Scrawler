@@ -1,1 +1,80 @@
-[]
+[
+  {
+    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/",
+    "title": "Einsatzstellensuche",
+    "organization": "",
+    "email": "",
+    "extracted_at": "2026-02-11T05:29:52.485Z"
+  },
+  {
+    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/22679",
+    "title": "Einsatzstelle: Chemnitzer Gewölbegänge",
+    "organization": "Chemnitzer Gewölbegänge",
+    "email": "info@chemnitzer-gewoelbegaenge.de",
+    "extracted_at": "2026-02-11T07:25:14.637Z"
+  },
+  {
+    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/2996",
+    "title": "Bauckhof Stütensen - Sozialtherapeutische Gemeinschaft",
+    "organization": "Bauckhof Stütensen e.V.",
+    "email": "p.mazzetti@bauckhof-stuetensen.de",
+    "extracted_at": "2026-02-11T07:25:14.735Z"
+  },
+  {
+    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/5142",
+    "title": "Bundesfreiwilligendienst in der CreativWerkstatt-Die Jugendkunstschule",
+    "organization": "CreativWerkstatt-Die Jugendkunstschule",
+    "email": "creativwerkstatt@herten.de",
+    "extracted_at": "2026-02-11T07:25:14.779Z"
+  },
+  {
+    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/927",
+    "title": "Freiwilligendienst im DRK Seniorenzentrum Bernhard-Salzmann-Haus",
+    "organization": "DRK Soziale Dienste Meschede gGmbH",
+    "email": "einrichtungsleitung@drk-meschede.de",
+    "extracted_at": "2026-02-11T07:25:14.875Z"
+  },
+  {
+    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/29694",
+    "title": "Freiwilligendienst bei Arpegio Hildesheim e.V. - Musik Streicherklassen",
+    "organization": "Arpegio Hildesheim e.V.",
+    "email": "info@arpegio-hildesheim.de",
+    "extracted_at": "2026-02-11T07:25:14.882Z"
+  },
+  {
+    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/22160",
+    "title": "Bundesfreiwilligendienst in der Wohngruppe Archehof",
+    "organization": "Archehof",
+    "location": "Kröpelin",
+    "email": "bfd@asb-kjh.de",
+    "extracted_at": "2026-02-11T07:25:15.204Z"
+  },
+  {
+    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/16235",
+    "title": "Einsatzstelle: Das Boot - Verein zur Förderung der psychischen Gesundheit",
+    "organization": "Das Boot - Verein zur Förderung der psychischen Gesundheit e.V.",
+    "email": "bewerbung@das-boot-emden.de",
+    "extracted_at": "2026-02-11T07:25:15.210Z"
+  },
+  {
+    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/25444",
+    "title": "'eastside' Club",
+    "organization": "'eastside' Club",
+    "email": "c.friese@juli-berlin.org",
+    "extracted_at": "2026-02-11T07:25:16.976Z"
+  },
+  {
+    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/27019",
+    "title": "'Für einander' Kontaktstelle Bürger-Engagement",
+    "organization": "Landratsamt Roth",
+    "email": "annegret.thuemmler@landratsamt-roth.de",
+    "extracted_at": "2026-02-11T07:25:17.672Z"
+  },
+  {
+    "url": "https://www.bundesfreiwilligendienst.de/bundesfreiwilligendienst/platz-einsatzstellensuche/einsatzstelle-suchen/31641",
+    "title": "Erinnerungsort Badehaus",
+    "organization": "Erinnerungsort Badehaus",
+    "email": "info@erinnerungsort-badehaus.de",
+    "extracted_at": "2026-02-11T07:25:22.082Z"
+  }
+]

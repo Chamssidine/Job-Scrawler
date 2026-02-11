@@ -27,11 +27,15 @@ function buildWriteTool(schema) {
 
   for (const [key, description] of Object.entries(schemaToUse)) {
     // Si la clé existe déjà (ex: url), on ne la duplique pas
-    if (!properties[key]) { 
+    if (!properties[key] && key !== 'url') { 
         properties[key] = { type: "string", description: typeof description === 'string' ? description : description.description };
         required.push(key);
     }
   }
+
+  // Ajouter des champs par défaut si schéma minimal
+  if (!properties.title) properties.title = { type: "string", description: "Titre de l'offre" };
+  if (!properties.organization) properties.organization = { type: "string", description: "Organisation/Entreprise" };
 
   return {
     type: "function",
@@ -54,10 +58,12 @@ function buildWriteTool(schema) {
   };
 }
 
-export async function agentStep(state, messages, customSchema = null) {
+export async function agentStep(state, messages, customSchema = null, options = {}) {
+  const { allowCrawlTool = true } = options;
   
   const tools = [
-    {
+    // Optionnellement inclure l'outil de crawl
+    ...(allowCrawlTool ? [{
       type: "function",
       function: {
         name: "crawl_page",
@@ -68,8 +74,8 @@ export async function agentStep(state, messages, customSchema = null) {
           required: ["url"]
         }
       }
-    },
-    // L'outil d'écriture est maintenant toujours construit dynamiquement
+    }] : []),
+    // Outil d'écriture dynamique
     buildWriteTool(customSchema)
   ];
 
@@ -83,8 +89,8 @@ export async function agentStep(state, messages, customSchema = null) {
 
   const msg = response.choices[0].message;
 
-  // Gestion des appels d'outils
   if (msg.tool_calls && msg.tool_calls.length > 0) {
+    console.log(`🔧 IA appelle: ${msg.tool_calls.map(c => c.function.name).join(', ')}`);
     for (const call of msg.tool_calls) {
       const args = JSON.parse(call.function.arguments || "{}");
 
@@ -98,7 +104,9 @@ export async function agentStep(state, messages, customSchema = null) {
       }
 
       if (call.function.name === "write_result") {
-        await writeResult(args.data);
+        const data = args.data;
+        console.log(`✍️ write_result: title="${data.title}", email="${data.email}", url="${data.url}"`);
+        await writeResult(data);
         return { type: "DONE" };
       }
     }

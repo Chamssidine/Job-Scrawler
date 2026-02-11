@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Patch updateStats in UI",
+			"type": "shell",
+			"command": "powershell -NoProfile -Command \"(Get-Content -Raw public/index.html) -replace 'function updateStats\\([\\s\\S]*?\\)\\s*\\{[\\s\\S]*?\\}','function updateStats(data) {\\n    const countEl = document.getElementById(\\'countTotal\\');\\n    const lastEl = document.getElementById(\\'lastScanTime\\');\\n    if (countEl) countEl.textContent = data.length;\\n    if (data.length > 0) {\\n        if (lastEl) { const date = new Date(data[0].extracted_at); lastEl.textContent = date.toLocaleTimeString([], {hour: \\'2-digit\\', minute:\\'2-digit\\'}); }\\n        if (exportBtn) exportBtn.classList.remove(\\'opacity-50\\', \\'pointer-events-none\\');\\n    } else {\\n        if (lastEl) lastEl.textContent = \\'-\\';\\n        if (exportBtn) exportBtn.classList.add(\\'opacity-50\\', \\'pointer-events-none\\');\\n    }\\n}' | Set-Content -NoNewline public/index.html\"",
+			"isBackground": false,
+			"group": "build"
+		}
+	]
+}

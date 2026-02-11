@@ -28,7 +28,17 @@ export async function writeResult(job) {
       return;
   }
 
+  // Vérifier qu'on a au moins un titre ou une organisation
+  const hasTitle = sanitizedJob.title || sanitizedJob.name || sanitizedJob.organization;
+  if (!hasTitle) {
+      // Relax: si on a une URL et du contenu, on écrit quand même
+      console.warn("⚠️ Job ignoré: pas de titre/organisation, mais URL présente:", sanitizedJob.url);
+      // Au lieu de retourner, on peut ajouter un titre par défaut
+      // return;
+  }
+
   try {
+    console.log(`📝 writeResult: ${sanitizedJob.title || sanitizedJob.url}`);
     // 2. Lire le fichier existant ou le créer (avec backup si corrompu)
     let data = [];
     try {

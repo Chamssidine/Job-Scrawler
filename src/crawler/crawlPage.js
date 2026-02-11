@@ -31,15 +31,14 @@ export async function crawlPage(url) {
     const $ = cheerio.load(res.data);
     const signals = extractSignals($, url);
 
-    if (signals.emails.length > 0 && signals.text.length > 400 && !signals.hasForm) {
-      finalData = {
-        url,
-        text: signals.text,
-        emails: signals.emails,
-        hasForm: signals.hasForm,
-        links: signals.links
-      };
-    }
+    // Toujours renvoyer les signaux, même sans emails: utile pour pages de liste
+    finalData = {
+      url,
+      text: signals.text,
+      emails: signals.emails,
+      hasForm: signals.hasForm,
+      links: signals.links
+    };
   } catch (err) {
     console.log(`Axios échoué pour ${url}, tentative Puppeteer...`);
   }
@@ -89,6 +88,13 @@ export async function crawlPage(url) {
   /* =====================
      3️⃣ Filtrage Intelligent Final
      ===================== */
+  if (!finalData) {
+    console.warn(`⚠️ Pas de données crawlées pour ${url}`);
+    return null;
+  }
+
+  console.log(`📄 Données extraites: ${finalData.text?.length || 0} chars, ${finalData.emails?.length || 0} emails, ${finalData.links?.length || 0} liens`);
+
   if (finalData && finalData.links) {
     const cleanLinks = [...new Set(finalData.links)].filter(link => {
       if (!link || !link.startsWith("http") || link.includes("#")) return false;

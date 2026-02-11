@@ -1,542 +1,283 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crawler Command Center</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --color-primary: #3b82f6; /* blue-500 */
-            --color-primary-hover: #2563eb; /* blue-600 */
-        }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #111827; } /* gray-900 */
-        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; } /* gray-700 */
-        ::-webkit-scrollbar-thumb:hover { background: #4b5563; } /* gray-600 */
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Crawler Command Center</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	<style>
+		:root {
+			--color-primary: #3b82f6; /* blue-500 */
+			--color-primary-hover: #2563eb; /* blue-600 */
+		}
+		::-webkit-scrollbar { width: 8px; }
+		::-webkit-scrollbar-track { background: #111827; }
+		::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+		::-webkit-scrollbar-thumb:hover { background: #4b5563; }
 
-        .glass-panel {
-            background: rgba(31, 41, 55, 0.6); /* gray-800/60 */
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(75, 85, 99, 0.5); /* gray-600/50 */
-        }
-        .job-card:hover, .config-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
-        }
-        .schema-field-group:not(:last-child) { margin-bottom: 0.75rem; }
+		.glass-panel { background: rgba(31,41,55,0.6); backdrop-filter: blur(12px); border: 1px solid rgba(75,85,99,0.5); }
+		.job-card:hover, .config-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2), 0 4px 6px -2px rgba(0,0,0,0.1); }
+		.schema-field-group:not(:last-child) { margin-bottom: 0.75rem; }
 
-        /* Animations de progression */
-        @keyframes spin-smooth { to { transform: rotate(360deg); } }
-        @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-        .spinner { animation: spin-smooth 1s linear infinite; }
-        .pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+		@keyframes spin-smooth { to { transform: rotate(360deg); } }
+		@keyframes pulse-soft { 0%,100%{opacity:1} 50%{opacity:.6} }
+		.spinner { animation: spin-smooth 1s linear infinite; }
+		.pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
 
-        /* Barre de progression */
-        .progress-bar { 
-            height: 4px; 
-            background: rgba(59, 130, 246, 0.2); 
-            border-radius: 2px; 
-            overflow: hidden;
-        }
-        .progress-fill { 
-            height: 100%; 
-            background: linear-gradient(90deg, #3b82f6, #60a5fa); 
-            transition: width 0.3s ease; 
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-        }
-
-        /* Job status panel */
-        .job-active { 
-            border-left: 4px solid #3b82f6; 
-            background: rgba(59, 130, 246, 0.05);
-        }
-        .job-waiting { 
-            border-left: 4px solid #f59e0b; 
-            background: rgba(245, 158, 11, 0.05);
-        }
-        .job-completed { 
-            border-left: 4px solid #10b981; 
-            background: rgba(16, 185, 129, 0.05);
-        }
-
-        /* Badge animations */
-        .badge-pulse { 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 0.5rem; 
-            padding: 0.25rem 0.75rem; 
-            border-radius: 9999px; 
-            font-size: 0.875rem; 
-            font-weight: 500;
-        }
-        .badge-active { background: rgba(59, 130, 246, 0.1); color: #60a5fa; }
-        .badge-waiting { background: rgba(245, 158, 11, 0.1); color: #fbbf24; }
-    </style>
+		.progress-bar{height:4px;background:rgba(59,130,246,.2);border-radius:2px;overflow:hidden}
+		.progress-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#60a5fa);transition:width .3s ease;box-shadow:0 0 10px rgba(59,130,246,.5)}
+		.job-active{border-left:4px solid #3b82f6;background:rgba(59,130,246,.05)}
+		.job-waiting{border-left:4px solid #f59e0b;background:rgba(245,158,11,.05)}
+		.badge-pulse{display:inline-flex;align-items:center;gap:.5rem;padding:.25rem .75rem;border-radius:9999px;font-size:.875rem;font-weight:500}
+		.badge-active{background:rgba(59,130,246,.1);color:#60a5fa}
+		.badge-waiting{background:rgba(245,158,11,.1);color:#fbbf24}
+	</style>
+	<script>
+	  tailwind.config = {
+		theme: { extend: { colors: { primary: '#3b82f6', 'primary-hover': '#2563eb' } } }
+	  }
+	</script>
 </head>
 <body class="bg-gray-900 text-gray-200 font-sans antialiased">
+	<nav class="glass-panel p-4 sticky top-0 z-50 border-b border-gray-700/50">
+		<div class="container mx-auto flex justify-between items-center">
+			<div class="flex items-center gap-3">
+				<i class="fa-solid fa-spider text-primary text-2xl"></i>
+				<h1 class="text-xl font-bold tracking-wider">Crawler <span class="text-primary">Center</span></h1>
+			</div>
+			<a href="/admin/queues" target="_blank" class="text-gray-400 hover:text-white transition-colors duration-300 flex items-center gap-2 text-sm">
+				<i class="fa-solid fa-chart-bar"></i>
+				<span>Monitoring</span>
+			</a>
+		</div>
+	</nav>
 
-    <nav class="glass-panel p-4 sticky top-0 z-50 border-b border-gray-700/50">
-        <div class="container mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <i class="fa-solid fa-spider text-primary text-2xl"></i>
-                <h1 class="text-xl font-bold tracking-wider">Crawler <span class="text-primary">Center</span></h1>
-            </div>
-            <a href="/admin/queues" target="_blank" class="text-gray-400 hover:text-white transition-colors duration-300 flex items-center gap-2 text-sm">
-                <i class="fa-solid fa-chart-bar"></i>
-                <span>Monitoring</span>
-            </a>
-        </div>
-    </nav>
+	<main class="container mx-auto p-4 md:p-6">
+		<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+			<aside class="lg:col-span-4 xl:col-span-3 space-y-6">
+				<div class="glass-panel p-6 rounded-lg shadow-2xl">
+					<h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+						<i class="fa-solid fa-paper-plane text-primary"></i> Lancer un Scan
+					</h2>
+					<form id="scanForm" class="space-y-4">
+						<div>
+							<label class="block text-sm text-gray-400 mb-1" for="siteName">Nom du projet</label>
+							<input type="text" id="siteName" placeholder="Ex: Amazon - T-shirts" required class="w-full bg-gray-900/50 border border-gray-600 rounded p-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition">
+						</div>
+						<div>
+							<label class="block text-sm text-gray-400 mb-1" for="siteUrl">URL Cible</label>
+							<input type="url" id="siteUrl" placeholder="https://..." required class="w-full bg-gray-900/50 border border-gray-600 rounded p-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition">
+						</div>
+						<div class="space-y-3 pt-2">
+							<label class="block text-sm text-gray-400">Schéma d'extraction (optionnel)</label>
+							<div id="schemaBuilder" class="space-y-2"></div>
+							<button type="button" id="addSchemaFieldBtn" class="w-full text-sm py-2 px-3 bg-gray-700/60 hover:bg-gray-700 rounded-md transition flex items-center justify-center gap-2">
+								<i class="fa-solid fa-plus"></i> Ajouter un champ
+							</button>
+						</div>
+						<div class="pt-2">
+							<label class="flex items-center text-sm text-gray-400">
+								<input type="checkbox" id="saveConfigCheckbox" class="h-4 w-4 rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary">
+								<span class="ml-2">Sauvegarder cette configuration</span>
+							</label>
+						</div>
+						<button type="submit" class="w-full bg-primary hover:bg-primary-hover text-white font-bold py-2.5 px-4 rounded-lg transition-all duration-300 flex justify-center items-center gap-2 shadow-lg hover:shadow-primary/30">
+							<i class="fa-solid fa-plus-circle"></i> Lancer & Ajouter à la file
+						</button>
+					</form>
+					<div id="statusMsg" class="mt-4 text-center text-sm" aria-live="polite"></div>
+				</div>
 
-    <main class="container mx-auto p-4 md:p-6">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+				<div class="glass-panel p-6 rounded-lg shadow-2xl">
+					<h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+						<i class="fa-solid fa-cogs text-primary"></i> Configurations Sauvegardées
+					</h2>
+					<div id="sitesContainer" class="space-y-3 max-h-96 overflow-y-auto pr-2"></div>
+				</div>
 
-            <aside class="lg:col-span-4 xl:col-span-3 space-y-6">
-                <div class="glass-panel p-6 rounded-lg shadow-2xl">
-                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-paper-plane text-primary"></i> Lancer un Scan
-                    </h2>
-                    <form id="scanForm" class="space-y-4">
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-1" for="siteName">Nom du projet</label>
-                            <input type="text" id="siteName" placeholder="Ex: Amazon - T-shirts" required
-                                class="w-full bg-gray-900/50 border border-gray-600 rounded p-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition">
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-400 mb-1" for="siteUrl">URL Cible</label>
-                            <input type="url" id="siteUrl" placeholder="https://..." required
-                                class="w-full bg-gray-900/50 border border-gray-600 rounded p-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition">
-                        </div>
-                        
-                        <div class="space-y-3 pt-2">
-                            <label class="block text-sm text-gray-400">Schéma d'extraction (optionnel)</label>
-                            <div id="schemaBuilder" class="space-y-2"></div>
-                            <button type="button" id="addSchemaFieldBtn" class="w-full text-sm py-2 px-3 bg-gray-700/60 hover:bg-gray-700 rounded-md transition flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-plus"></i> Ajouter un champ
-                            </button>
-                        </div>
+				<div class="glass-panel p-6 rounded-lg shadow-2xl">
+					<h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+						<i class="fa-solid fa-hourglass-end text-yellow-400 spinner"></i> Progression des Scans
+					</h2>
+					<div class="grid grid-cols-2 gap-2 mb-4 text-sm">
+						<div class="p-2 bg-blue-500/10 rounded"><div class="text-blue-400 font-bold"><i class="fa-solid fa-play"></i> <span id="statsActive">0</span></div><div class="text-gray-500 text-xs">En cours</div></div>
+						<div class="p-2 bg-yellow-500/10 rounded"><div class="text-yellow-400 font-bold"><i class="fa-solid fa-list"></i> <span id="statsWaiting">0</span></div><div class="text-gray-500 text-xs">En attente</div></div>
+						<div class="p-2 bg-green-500/10 rounded"><div class="text-green-400 font-bold"><i class="fa-solid fa-check"></i> <span id="statsCompleted">0</span></div><div class="text-gray-500 text-xs">Complétés</div></div>
+						<div class="p-2 bg-red-500/10 rounded"><div class="text-red-400 font-bold"><i class="fa-solid fa-times"></i> <span id="statsFailed">0</span></div><div class="text-gray-500 text-xs">Échoués</div></div>
+					</div>
+					<div id="jobsContainer" class="space-y-2 max-h-64 overflow-y-auto pr-2"><p class="text-center text-gray-500 text-sm">Aucun scan en cours</p></div>
+				</div>
+			</aside>
 
-                        <div class="pt-2">
-                            <label class="flex items-center text-sm text-gray-400">
-                                <input type="checkbox" id="saveConfigCheckbox" class="h-4 w-4 rounded bg-gray-700 border-gray-600 text-primary focus:ring-primary">
-                                <span class="ml-2">Sauvegarder cette configuration</span>
-                            </label>
-                        </div>
+			<section class="lg:col-span-8 xl:col-span-9">
+				<div class="glass-panel p-4 sm:p-6 rounded-lg shadow-2xl h-full">
+					<div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
+						<h2 class="text-lg font-semibold flex items-center gap-2"><i class="fa-solid fa-list-check text-primary"></i> Résultats</h2>
+						<div class="flex items-center gap-3 w-full sm:w-auto">
+							<div class="relative w-full sm:max-w-xs flex-grow">
+								<input type="text" id="searchInput" placeholder="Filtrer les résultats..." class="w-full bg-gray-900/50 border border-gray-600 rounded-full py-2 pl-10 pr-4 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition">
+								<i class="fa-solid fa-search text-gray-500 absolute left-4 top-1/2 -translate-y-1/2"></i>
+							</div>
+							<a id="exportBtn" href="/api/export" download="results.csv" class="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-green-600/80 hover:bg-green-600 text-white rounded-full text-sm font-semibold transition opacity-50 pointer-events-none">
+								<i class="fa-solid fa-file-csv"></i><span>Exporter</span>
+							</a>
+						</div>
+					</div>
+					<div id="resultsContainer" class="space-y-4 mt-6 h-[calc(100vh-250px)] overflow-y-auto pr-2"></div>
+				</div>
+			</section>
+		</div>
+	</main>
 
-                        <button type="submit" 
-                            class="w-full bg-primary hover:bg-primary-hover text-white font-bold py-2.5 px-4 rounded-lg transition-all duration-300 flex justify-center items-center gap-2 shadow-lg hover:shadow-primary/30">
-                            <i class="fa-solid fa-plus-circle"></i> Lancer & Ajouter à la file
-                        </button>
-                    </form>
-                    <div id="statusMsg" class="mt-4 text-center text-sm" aria-live="polite"></div>
-                </div>
+	<script>
+		const scanForm = document.getElementById('scanForm');
+		const statusMsg = document.getElementById('statusMsg');
+		const searchInput = document.getElementById('searchInput');
+		const schemaBuilder = document.getElementById('schemaBuilder');
+		const addSchemaFieldBtn = document.getElementById('addSchemaFieldBtn');
+		const exportBtn = document.getElementById('exportBtn');
+		const sitesContainer = document.getElementById('sitesContainer');
+		const jobsContainer = document.getElementById('jobsContainer');
+		let allResults = [];
 
-                <div class="glass-panel p-6 rounded-lg shadow-2xl">
-                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-cogs text-primary"></i> Configurations Sauvegardées
-                    </h2>
-                    <div id="sitesContainer" class="space-y-3 max-h-96 overflow-y-auto pr-2">
-                        <!-- Les configurations sauvegardées seront injectées ici -->
-                    </div>
-                </div>
+		// Events
+		scanForm.addEventListener('submit', handleScanSubmit);
+		searchInput.addEventListener('input', () => renderResults(allResults));
+		addSchemaFieldBtn.addEventListener('click', () => addSchemaField());
+		schemaBuilder.addEventListener('click', (e) => { if (e.target.closest('.remove-schema-field')) e.target.closest('.schema-field-group').remove(); });
+		sitesContainer.addEventListener('click', handleSiteActions);
 
-                <!-- Panel Progression des Jobs -->
-                <div class="glass-panel p-6 rounded-lg shadow-2xl">
-                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-hourglass-end text-yellow-400 spinner"></i> Progression des Scans
-                    </h2>
-                    <div id="jobsStatsContainer" class="grid grid-cols-2 gap-2 mb-4 text-sm">
-                        <div class="p-2 bg-blue-500/10 rounded">
-                            <div class="text-blue-400 font-bold"><i class="fa-solid fa-play"></i> <span id="statsActive">0</span></div>
-                            <div class="text-gray-500 text-xs">En cours</div>
-                        </div>
-                        <div class="p-2 bg-yellow-500/10 rounded">
-                            <div class="text-yellow-400 font-bold"><i class="fa-solid fa-list"></i> <span id="statsWaiting">0</span></div>
-                            <div class="text-gray-500 text-xs">En attente</div>
-                        </div>
-                        <div class="p-2 bg-green-500/10 rounded">
-                            <div class="text-green-400 font-bold"><i class="fa-solid fa-check"></i> <span id="statsCompleted">0</span></div>
-                            <div class="text-gray-500 text-xs">Complétés</div>
-                        </div>
-                        <div class="p-2 bg-red-500/10 rounded">
-                            <div class="text-red-400 font-bold"><i class="fa-solid fa-times"></i> <span id="statsFailed">0</span></div>
-                            <div class="text-gray-500 text-xs">Échoués</div>
-                        </div>
-                    </div>
-                    <div id="jobsContainer" class="space-y-2 max-h-64 overflow-y-auto pr-2">
-                        <p class="text-center text-gray-500 text-sm">Aucun scan en cours</p>
-                    </div>
-                </div>
-            </aside>
+		// Schema builder
+		function addSchemaField(key = '', value = '') {
+			const div = document.createElement('div');
+			div.className = 'schema-field-group flex items-center gap-2';
+			div.innerHTML = `
+				<input type="text" placeholder="Clé" value="${key}" class="schema-key w-1/3 bg-gray-900/50 border border-gray-600 rounded p-2 text-sm focus:border-primary focus:outline-none">
+				<input type="text" placeholder="Description" value="${value}" class="schema-value flex-grow bg-gray-900/50 border border-gray-600 rounded p-2 text-sm focus:border-primary focus:outline-none">
+				<button type="button" class="remove-schema-field flex-shrink-0 h-9 w-9 text-gray-500 hover:text-red-400 transition"><i class="fa-solid fa-trash"></i></button>`;
+			schemaBuilder.appendChild(div);
+		}
+		function buildSchemaFromUI() {
+			const fields = schemaBuilder.querySelectorAll('.schema-field-group');
+			const schema = {};
+			fields.forEach(f => { const k = f.querySelector('.schema-key').value.trim(); const v = f.querySelector('.schema-value').value.trim(); if (k && v) schema[k]=v; });
+			return Object.keys(schema).length ? schema : null;
+		}
+		function populateForm(config){
+			document.getElementById('siteName').value = config.name;
+			document.getElementById('siteUrl').value = config.url;
+			schemaBuilder.innerHTML = '';
+			if (config.schema) Object.entries(config.schema).forEach(([k,v])=>addSchemaField(k,v));
+			document.getElementById('saveConfigCheckbox').checked = true;
+		}
 
-            <section class="lg:col-span-8 xl:col-span-9">
-                 <div class="glass-panel p-4 sm:p-6 rounded-lg shadow-2xl h-full">
-                    <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-4">
-                        <h2 class="text-lg font-semibold flex items-center gap-2">
-                            <i class="fa-solid fa-list-check text-primary"></i> Résultats
-                        </h2>
-                        <div class="flex items-center gap-3 w-full sm:w-auto">
-                            <div class="relative w-full sm:max-w-xs flex-grow">
-                                <input type="text" id="searchInput" placeholder="Filtrer les résultats..." class="w-full bg-gray-900/50 border border-gray-600 rounded-full py-2 pl-10 pr-4 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition">
-                                <i class="fa-solid fa-search text-gray-500 absolute left-4 top-1/2 -translate-y-1/2"></i>
-                            </div>
-                            <a id="exportBtn" href="/api/export" download="results.csv" class="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-green-600/80 hover:bg-green-600 text-white rounded-full text-sm font-semibold transition opacity-50 pointer-events-none">
-                                <i class="fa-solid fa-file-csv"></i>
-                                <span>Exporter</span>
-                            </a>
-                        </div>
-                    </div>
+		// Sites
+		async function fetchSites(){ try{ const res = await fetch('/api/sites'); renderSites(await res.json()); }catch(e){ console.error('Erreur sites:',e);} }
+		function renderSites(sites){
+			sitesContainer.innerHTML = '';
+			if (!sites.length){ sitesContainer.innerHTML = `<p class="text-center text-sm text-gray-500">Aucune configuration.</p>`; return; }
+			sites.forEach(site=>{
+				const card = document.createElement('div');
+				card.className='config-card glass-panel p-3 rounded-lg border border-transparent hover:border-primary/50 transition-all duration-300';
+				card.dataset.config = JSON.stringify(site);
+				card.innerHTML = `
+					<p class="font-bold text-sm truncate">${site.name}</p>
+					<p class="text-xs text-gray-400 truncate">${site.url}</p>
+					<div class="flex items-center gap-2 mt-3">
+						<button class="run-config-btn w-full text-xs py-1 px-2 bg-blue-600/50 hover:bg-blue-600/80 rounded transition">Lancer</button>
+						<button class="edit-config-btn w-auto text-xs py-1 px-2 bg-gray-600/50 hover:bg-gray-600/80 rounded transition"><i class="fa-solid fa-pencil"></i></button>
+						<button class="delete-config-btn w-auto text-xs py-1 px-2 bg-red-600/50 hover:bg-red-600/80 rounded transition"><i class="fa-solid fa-trash"></i></button>
+					</div>`;
+				sitesContainer.appendChild(card);
+			});
+		}
+		async function handleSiteActions(e){
+			const card = e.target.closest('.config-card'); if(!card) return; const config = JSON.parse(card.dataset.config);
+			if(e.target.closest('.run-config-btn')){ await runScan(config, false); }
+			else if(e.target.closest('.edit-config-btn')){ populateForm(config); }
+			else if(e.target.closest('.delete-config-btn')){
+				if(!confirm(`Supprimer la config "${config.name}" ?`)) return;
+				try{ const res = await fetch('/api/sites', { method:'DELETE', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name:config.name}) }); if(!res.ok) throw new Error((await res.json()).message); showStatus(`✅ Configuration "${config.name}" supprimée`, 'text-green-400'); fetchSites(); }catch(err){ showStatus(`❌ ${err.message}`, 'text-red-400'); }
+			}
+		}
 
-                    <div id="resultsContainer" class="space-y-4 mt-6 h-[calc(100vh-250px)] overflow-y-auto pr-2">
-                        <!-- Les cartes de résultats seront injectées ici -->
-                    </div>
-                </div>
-            </section>
-        </div>
-    </main>
+		// Scan
+		async function handleScanSubmit(e){ e.preventDefault(); const name=document.getElementById('siteName').value; const url=document.getElementById('siteUrl').value; const schema=buildSchemaFromUI(); const save=document.getElementById('saveConfigCheckbox').checked; await runScan({name,url,schema}, save, e.target.querySelector('button[type="submit"]')); }
+		async function runScan(config, save, btn=null){ let originalText; if(btn){ originalText=btn.innerHTML; btn.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Traitement...'; btn.disabled=true; }
+			try{ const res = await fetch('/api/scan',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...config, saveConfig: save})}); if(res.ok){ showStatus('✅ Scan ajouté à la file d\'attente !', 'text-green-400'); if(save){ scanForm.reset(); schemaBuilder.innerHTML=''; fetchSites(); } fetchJobs(); }
+				 else { throw new Error((await res.json()).message || 'Erreur serveur'); } }
+			catch(err){ showStatus(`❌ ${err.message}`, 'text-red-400'); }
+			finally{ if(btn){ setTimeout(()=>{ btn.innerHTML=originalText; btn.disabled=false; }, 2000); } }
+		}
 
-    <script>
-        const scanForm = document.getElementById('scanForm');
-        const statusMsg = document.getElementById('statusMsg');
-        const searchInput = document.getElementById('searchInput');
-        const schemaBuilder = document.getElementById('schemaBuilder');
-        const addSchemaFieldBtn = document.getElementById('addSchemaFieldBtn');
-        const exportBtn = document.getElementById('exportBtn');
-        const sitesContainer = document.getElementById('sitesContainer');
-        const jobsContainer = document.getElementById('jobsContainer');
-        let allResults = [];
+		// Results
+		async function fetchResults(){ try{ const res = await fetch('/api/results'); let data = await res.json(); console.log(`🔄 Fetch results: ${data.length} résultats`); data.sort((a,b)=> new Date(b.extracted_at) - new Date(a.extracted_at)); if(JSON.stringify(allResults)!==JSON.stringify(data)){ console.log(`📊 Mise à jour UI: ${allResults.length} → ${data.length}`); allResults = data; updateStats(allResults); renderResults(allResults); } } catch(err){ console.error('Erreur de récupération des résultats:', err); } }
+		function renderResults(data){
+			const container = document.getElementById('resultsContainer');
+			const filterText = (searchInput.value || '').toLowerCase();
+			const filtered = data.filter(item => JSON.stringify(item).toLowerCase().includes(filterText));
+			container.innerHTML = '';
+			if (!filtered.length) {
+				container.innerHTML = `<div class="text-center p-10 text-gray-500"><i class=\"fa-solid fa-ghost text-3xl mb-4\"></i><p>Aucun résultat à afficher.</p></div>`;
+				return;
+			}
 
-        // --- GESTION DES EVENEMENTS ---
-        scanForm.addEventListener('submit', handleScanSubmit);
-        searchInput.addEventListener('input', () => renderResults(allResults));
-        addSchemaFieldBtn.addEventListener('click', () => addSchemaField());
-        schemaBuilder.addEventListener('click', (e) => {
-            if (e.target.closest('.remove-schema-field')) {
-                e.target.closest('.schema-field-group').remove();
-            }
-        });
-        sitesContainer.addEventListener('click', handleSiteActions);
+			filtered.forEach(item => {
+				const card = document.createElement('div');
+				card.className = 'job-card glass-panel p-4 rounded-lg border border-transparent hover:border-primary/50 transition-all duration-300';
 
-        // --- FONCTIONS DU CONSTRUCTEUR DE SCHEMA ---
-        function addSchemaField(key = '', value = '') {
-            const newField = document.createElement('div');
-            newField.className = 'schema-field-group flex items-center gap-2';
-            newField.innerHTML = `
-                <input type="text" placeholder="Clé" value="${key}" class="schema-key w-1/3 bg-gray-900/50 border border-gray-600 rounded p-2 text-sm focus:border-primary focus:outline-none">
-                <input type="text" placeholder="Description" value="${value}" class="schema-value flex-grow bg-gray-900/50 border border-gray-600 rounded p-2 text-sm focus:border-primary focus:outline-none">
-                <button type="button" class="remove-schema-field flex-shrink-0 h-9 w-9 text-gray-500 hover:text-red-400 transition"><i class="fa-solid fa-trash"></i></button>
-            `;
-            schemaBuilder.appendChild(newField);
-        }
+				const { url, email, extracted_at, ...displayData } = item;
+				const titleKey = Object.keys(displayData).find(k => k.toLowerCase().includes('title') || k.toLowerCase().includes('name')) || Object.keys(displayData)[0];
+				const title = displayData[titleKey] || 'Résultat sans titre';
 
-        function buildSchemaFromUI() {
-            const fields = schemaBuilder.querySelectorAll('.schema-field-group');
-            const schema = {};
-            fields.forEach(field => {
-                const key = field.querySelector('.schema-key').value.trim();
-                const value = field.querySelector('.schema-value').value.trim();
-                if (key && value) schema[key] = value;
-            });
-            return Object.keys(schema).length > 0 ? schema : null;
-        }
+				let host = '';
+				try { host = new URL(url).hostname; } catch { host = url || ''; }
 
-        function populateForm(config) {
-            document.getElementById('siteName').value = config.name;
-            document.getElementById('siteUrl').value = config.url;
-            schemaBuilder.innerHTML = '';
-            if (config.schema) {
-                for (const [key, value] of Object.entries(config.schema)) {
-                    addSchemaField(key, value);
-                }
-            }
-            document.getElementById('saveConfigCheckbox').checked = true;
-        }
+				const metaHtml = `
+					<div class="flex flex-wrap gap-2 mt-2">
+						<span class="px-2 py-0.5 rounded-full bg-gray-700/50 text-gray-300 text-xs"><i class=\"fa-solid fa-globe mr-1\"></i>${host}</span>
+						<span class="px-2 py-0.5 rounded-full ${email ? 'bg-green-700/40 text-green-300' : 'bg-gray-700/50 text-gray-400'} text-xs"><i class=\"fa-solid fa-at mr-1\"></i>${email || '—'}</span>
+					</div>`;
 
-        // --- FONCTIONS DE GESTION DES CONFIGURATIONS ---
-        async function fetchSites() {
-            try {
-                const res = await fetch('/api/sites');
-                const sites = await res.json();
-                renderSites(sites);
-            } catch (err) {
-                console.error("Erreur de récupération des sites:", err);
-            }
-        }
+				const detailsHtml = Object.entries(displayData)
+					.filter(([k]) => k !== titleKey)
+					.map(([k, v]) => `<div class=\"text-sm text-gray-400 mt-2\"><strong class=\"text-gray-500 capitalize\">${k.replace(/_/g,' ')}:</strong> ${v || 'N/A'}</div>`)
+					.join('');
 
-        function renderSites(sites) {
-            sitesContainer.innerHTML = '';
-            if (sites.length === 0) {
-                sitesContainer.innerHTML = `<p class="text-center text-sm text-gray-500">Aucune configuration.</p>`;
-                return;
-            }
-            sites.forEach(site => {
-                const card = document.createElement('div');
-                card.className = 'config-card glass-panel p-3 rounded-lg border border-transparent hover:border-primary/50 transition-all duration-300';
-                card.dataset.config = JSON.stringify(site);
-                card.innerHTML = `
-                    <p class="font-bold text-sm truncate">${site.name}</p>
-                    <p class="text-xs text-gray-400 truncate">${site.url}</p>
-                    <div class="flex items-center gap-2 mt-3">
-                        <button class="run-config-btn w-full text-xs py-1 px-2 bg-blue-600/50 hover:bg-blue-600/80 rounded transition">Lancer</button>
-                        <button class="edit-config-btn w-auto text-xs py-1 px-2 bg-gray-600/50 hover:bg-gray-600/80 rounded transition"><i class="fa-solid fa-pencil"></i></button>
-                        <button class="delete-config-btn w-auto text-xs py-1 px-2 bg-red-600/50 hover:bg-red-600/80 rounded transition"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                `;
-                sitesContainer.appendChild(card);
-            });
-        }
+				card.innerHTML = `
+					<div class=\"flex flex-col sm:flex-row justify-between sm:items-start gap-3\">
+						<div class=\"flex-grow\">
+							<h3 class=\"font-bold text-md text-gray-100\">${title}</h3>
+							${metaHtml}
+							<div class=\"mt-2 space-y-1\">${detailsHtml}</div>
+						</div>
+						<div class=\"flex-shrink-0 flex items-center gap-2 mt-2 sm:mt-0\">
+							${email ? `<a href=\"mailto:${email}\" class=\"h-8 w-8 flex items-center justify-center bg-gray-700/50 hover:bg-gray-600 rounded-full text-gray-300 transition\" title=\"Contacter par email\"><i class=\"fa-solid fa-envelope\"></i></a>` : ''}
+							${url ? `<a href=\"${url}\" target=\"_blank\" class=\"h-8 w-8 flex items-center justify-center bg-primary/20 hover:bg-primary/40 rounded-full text-primary transition\" title=\"Voir la source\"><i class=\"fa-solid fa-arrow-up-right-from-square\"></i></a>` : ''}
+						</div>
+					</div>
+					<div class=\"text-right text-xs text-gray-600 font-mono mt-3 pt-3 border-t border-gray-700/50\">${new Date(item.extracted_at || Date.now()).toLocaleString('fr-FR')}</div>
+				`;
+				container.appendChild(card);
+			});
+		}
+		function updateStats(data){ const countEl=document.getElementById('countTotal'); const lastEl=document.getElementById('lastScanTime'); if(countEl) countEl.textContent = data.length; if(data.length>0){ if(lastEl){ const d=new Date(data[0].extracted_at); lastEl.textContent=d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});} if(exportBtn) exportBtn.classList.remove('opacity-50','pointer-events-none'); } else { if(lastEl) lastEl.textContent='-'; if(exportBtn) exportBtn.classList.add('opacity-50','pointer-events-none'); } }
 
-        async function handleSiteActions(e) {
-            const configCard = e.target.closest('.config-card');
-            if (!configCard) return;
-            const config = JSON.parse(configCard.dataset.config);
+		// Jobs
+		async function fetchJobs(){ try{ const res = await fetch('/api/jobs'); const jobsData = await res.json(); document.getElementById('statsActive').textContent = jobsData.active; document.getElementById('statsWaiting').textContent = jobsData.waiting; document.getElementById('statsCompleted').textContent = jobsData.completed; document.getElementById('statsFailed').textContent = jobsData.failed; renderJobs(jobsData); } catch(err){ console.error('Erreur récupération des jobs:', err); } }
+		function renderJobs(j){ const container = jobsContainer; if((j.active||0)===0 && (j.waiting||0)===0){ container.innerHTML = `<p class=\"text-center text-gray-500 text-sm\">Aucun scan en cours</p>`; return; } container.innerHTML=''; if(j.activeJobs?.length){ j.activeJobs.forEach(job=>{ const card=document.createElement('div'); card.className='job-active glass-panel p-3 rounded-lg text-sm'; card.innerHTML = `<div class=\"flex justify-between items-start gap-2\"><div class=\"flex-grow\"><div class=\"font-semibold text-blue-300 flex items-center gap-2\"><i class=\"fa-solid fa-spinner spinner\"></i> ${job.source||'Scan'}</div><div class=\"text-gray-400 text-xs truncate mt-1\">${job.url||''}</div><div class=\"text-gray-500 text-xs mt-1\">Profondeur: ${job.depth||0}/2</div></div><span class=\"badge-pulse badge-active\"><i class=\"fa-solid fa-play\"></i> Actif</span></div>`; container.appendChild(card); }); }
+			if(j.waitingJobs?.length){ j.waitingJobs.slice(0,3).forEach(job=>{ const card=document.createElement('div'); card.className='job-waiting glass-panel p-3 rounded-lg text-sm'; card.innerHTML = `<div class=\"flex justify-between items-start gap-2\"><div class=\"flex-grow\"><div class=\"font-semibold text-yellow-300 flex items-center gap-2\"><i class=\"fa-solid fa-hourglass-end\"></i> ${job.source||'Scan'}</div><div class=\"text-gray-400 text-xs truncate mt-1\">${job.url||''}</div></div><span class=\"badge-pulse badge-waiting\"><i class=\"fa-solid fa-list\"></i> En attente</span></div>`; container.appendChild(card); }); if(j.waitingJobs.length>3){ const more=document.createElement('div'); more.className='p-2 text-center text-gray-500 text-xs'; more.innerHTML = `+${j.waitingJobs.length-3} en attente`; container.appendChild(more);} }
+		}
 
-            if (e.target.closest('.run-config-btn')) {
-                await runScan(config, false); 
-            } else if (e.target.closest('.edit-config-btn')) {
-                populateForm(config);
-            } else if (e.target.closest('.delete-config-btn')) {
-                if (!confirm(`Voulez-vous vraiment supprimer la configuration \"${config.name}\" ?`)) return;
-                try {
-                    const res = await fetch('/api/sites', {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name: config.name })
-                    });
-                    if (!res.ok) throw new Error((await res.json()).message);
-                    showStatus(`✅ Configuration \"${config.name}\" supprimée`, "text-green-400");
-                    fetchSites();
-                } catch (err) {
-                    showStatus(`❌ ${err.message}`, "text-red-400");
-                }
-            }
-        }
+		// UI helpers
+		function showStatus(message, styleClass){ statusMsg.textContent = message; statusMsg.className = `mt-4 text-center text-sm ${styleClass} transition-opacity duration-300 opacity-100`; setTimeout(hideStatus, 3000); }
+		function hideStatus(){ statusMsg.className = statusMsg.className.replace('opacity-100','opacity-0'); }
 
-        // --- FONCTIONS PRINCIPALES DE SCAN ---
-        async function handleScanSubmit(e) {
-            e.preventDefault();
-            const name = document.getElementById('siteName').value;
-            const url = document.getElementById('siteUrl').value;
-            const schema = buildSchemaFromUI();
-            const saveConfig = document.getElementById('saveConfigCheckbox').checked;
-
-            await runScan({ name, url, schema }, saveConfig, e.target.querySelector('button[type="submit"]'));
-        }
-
-        async function runScan(config, save, btn = null) {
-            let originalText;
-            if (btn) {
-                originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Traitement...';
-                btn.disabled = true;
-            }
-
-            try {
-                const res = await fetch(`/api/scan`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ...config, saveConfig: save })
-                });
-                
-                if (res.ok) {
-                    showStatus("✅ Scan ajouté à la file d'attente !", "text-green-400");
-                    if (save) {
-                        scanForm.reset();
-                        schemaBuilder.innerHTML = '';
-                        fetchSites(); // Rafraîchir la liste
-                    }
-                } else {
-                    throw new Error((await res.json()).message || 'Erreur serveur');
-                }
-            } catch (err) {
-                showStatus(`❌ ${err.message}`, "text-red-400");
-            } finally {
-                if (btn) {
-                    setTimeout(() => {
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
-                    }, 2500);
-                }
-            }
-        }
-
-        
-        // --- FONCTIONS DE PROGRESSION EN DIRECT ---
-        async function fetchJobs() {
-            try {
-                const res = await fetch('/api/jobs');
-                const jobsData = await res.json();
-                
-                // Mise à jour des stats
-                document.getElementById('statsActive').textContent = jobsData.active;
-                document.getElementById('statsWaiting').textContent = jobsData.waiting;
-                document.getElementById('statsCompleted').textContent = jobsData.completed;
-                document.getElementById('statsFailed').textContent = jobsData.failed;
-                
-                // Rendu des jobs en cours
-                renderJobs(jobsData);
-            } catch (err) {
-                console.error("Erreur récupération des jobs:", err);
-            }
-        }
-
-        function renderJobs(jobsData) {
-            const container = document.getElementById('jobsContainer');
-            
-            if (jobsData.active === 0 && jobsData.waiting === 0) {
-                container.innerHTML = `<p class="text-center text-gray-500 text-sm">Aucun scan en cours</p>`;
-                return;
-            }
-
-            container.innerHTML = '';
-
-            // Jobs actifs
-            if (jobsData.activeJobs && jobsData.activeJobs.length > 0) {
-                jobsData.activeJobs.forEach(job => {
-                    const card = document.createElement('div');
-                    card.className = 'job-active glass-panel p-3 rounded-lg text-sm';
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start gap-2">
-                            <div class="flex-grow">
-                                <div class="font-semibold text-blue-300 flex items-center gap-2">
-                                    <i class="fa-solid fa-spinner spinner"></i> 
-                                    ${job.source || 'Scan'}
-                                </div>
-                                <div class="text-gray-400 text-xs truncate mt-1">${job.url}</div>
-                                <div class="text-gray-500 text-xs mt-1">Profondeur: ${job.depth}/2</div>
-                            </div>
-                            <span class="badge-pulse badge-active">
-                                <i class="fa-solid fa-play"></i> Actif
-                            </span>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-            }
-
-            // Jobs en attente
-            if (jobsData.waitingJobs && jobsData.waitingJobs.length > 0) {
-                jobsData.waitingJobs.slice(0, 3).forEach(job => {
-                    const card = document.createElement('div');
-                    card.className = 'job-waiting glass-panel p-3 rounded-lg text-sm';
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start gap-2">
-                            <div class="flex-grow">
-                                <div class="font-semibold text-yellow-300 flex items-center gap-2">
-                                    <i class="fa-solid fa-hourglass-end"></i> 
-                                    ${job.source || 'Scan'}
-                                </div>
-                                <div class="text-gray-400 text-xs truncate mt-1">${job.url}</div>
-                            </div>
-                            <span class="badge-pulse badge-waiting">
-                                <i class="fa-solid fa-list"></i> En attente
-                            </span>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-                
-                if (jobsData.waitingJobs.length > 3) {
-                    const more = document.createElement('div');
-                    more.className = 'p-2 text-center text-gray-500 text-xs';
-                    more.innerHTML = `+${jobsData.waitingJobs.length - 3} en attente`;
-                    container.appendChild(more);
-                }
-            }
-        }
-
-        async function fetchResults() {
-            try {
-                const res = await fetch(`/api/results`);
-                let data = await res.json();
-                data.sort((a, b) => new Date(b.extracted_at) - new Date(a.extracted_at));
-                
-                if (JSON.stringify(allResults) !== JSON.stringify(data)) {
-                    allResults = data;
-                    updateStats(allResults);
-                    renderResults(allResults);
-                }
-            } catch (err) {
-                console.error("Erreur de récupération des résultats:", err);
-            }
-        }
-
-
-        function renderResults(data) {
-            const container = document.getElementById('resultsContainer');
-            const filterText = searchInput.value.toLowerCase();
-            
-            const filteredData = data.filter(item => JSON.stringify(item).toLowerCase().includes(filterText));
-            
-            container.innerHTML = '';
-            if (filteredData.length === 0) {
-                container.innerHTML = `<div class="text-center p-10 text-gray-500"><i class="fa-solid fa-ghost text-3xl mb-4"></i><p>Aucun résultat à afficher.</p></div>`;
-                return;
-            }
-
-            filteredData.forEach(item => {
-                const card = document.createElement('div');
-                card.className = "job-card glass-panel p-4 rounded-lg border border-transparent hover:border-primary/50 transition-all duration-300";
-                
-                const { url, email, extracted_at, ...displayData } = item;
-                const titleKey = Object.keys(displayData).find(k => k.toLowerCase().includes('title') || k.toLowerCase().includes('name')) || Object.keys(displayData)[0];
-                const title = displayData[titleKey] || 'Résultat sans titre';
-
-                const detailsHtml = Object.entries(displayData)
-                    .filter(([key]) => key !== titleKey)
-                    .map(([key, value]) => `<div class="text-sm text-gray-400 mt-2"><strong class="text-gray-500 capitalize">${key.replace(/_/g, ' ')}:</strong> ${value || 'N/A'}</div>`).join('');
-
-                card.innerHTML = `
-                    <div class="flex flex-col sm:flex-row justify-between sm:items-start gap-3">
-                        <div class="flex-grow">
-                            <h3 class="font-bold text-md text-gray-100">${title}</h3>
-                            <div class="mt-2 space-y-1">${detailsHtml}</div>
-                        </div>
-                        <div class="flex-shrink-0 flex items-center gap-2 mt-2 sm:mt-0">
-                            ${email ? `<a href="mailto:${email}" class="h-8 w-8 flex items-center justify-center bg-gray-700/50 hover:bg-gray-600 rounded-full text-gray-300 transition" title="Contacter par email"><i class="fa-solid fa-envelope"></i></a>` : ''}
-                            ${url ? `<a href="${url}" target="_blank" class="h-8 w-8 flex items-center justify-center bg-primary/20 hover:bg-primary/40 rounded-full text-primary transition" title="Voir la source"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
-                        </div>
-                    </div>
-                    <div class="text-right text-xs text-gray-600 font-mono mt-3 pt-3 border-t border-gray-700/50">
-                        ${new Date(item.extracted_at || Date.now()).toLocaleString('fr-FR')}
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-        
-        // --- FONCTIONS UTILITAIRES ---
-        function updateStats(data) {
-            document.getElementById('countTotal').textContent = data.length;
-            if (data.length > 0) {
-                const date = new Date(data[0].extracted_at);
-                document.getElementById('lastScanTime').textContent = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                exportBtn.classList.remove('opacity-50', 'pointer-events-none');
-            } else {
-                document.getElementById('lastScanTime').textContent = '-';
-                exportBtn.classList.add('opacity-50', 'pointer-events-none');
-            }
-        }
-        
-        function showStatus(message, styleClass) {
-            statusMsg.textContent = message;
-            statusMsg.className = `mt-4 text-center text-sm ${styleClass} transition-opacity duration-300 opacity-100`;
-            setTimeout(hideStatus, 3000);
-        }
-
-        function hideStatus() {
-            statusMsg.className = statusMsg.className.replace('opacity-100', 'opacity-0');
-        }
-
-        // --- INITIALISATION ---
-        fetchResults();
-        fetchSites();
-        fetchJobs();
-        setInterval(fetchResults, 5000);
-        setInterval(fetchJobs, 2000);  // Mise à jour rapide des jobs toutes les 2 secondes
-
-    </script>
+		// Init
+		fetchResults(); fetchSites(); fetchJobs();
+		setInterval(fetchResults, 2000);
+		setInterval(fetchJobs, 2000);
+	</script>
 </body>
 </html>
