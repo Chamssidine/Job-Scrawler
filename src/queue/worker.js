@@ -10,6 +10,7 @@ import { writeResult } from '../storage/writeResult.js';
 
 const worker = new Worker('job-crawler', async (job) => {
   const { url, depth, source, maxDepth, schema } = job.data;
+  const childLimit = parseInt((job.data?.childLimit ?? process.env.CHILD_LIMIT ?? '20'), 10);
   
   const state = { visited: new Set(), depth, source };
 
@@ -29,8 +30,7 @@ const worker = new Worker('job-crawler', async (job) => {
   // Propagation du schéma aux enfants (liens suivis)
   if (Array.isArray(page.links) && page.links.length && depth < maxDepth) {
     console.log(`📎 Enqueue enfants: depth=${depth}/${maxDepth} links=${page.links.length}`);
-    const CHILD_LIMIT = parseInt(process.env.CHILD_LIMIT || '20', 10);
-    const results = await Promise.allSettled(page.links.slice(0, CHILD_LIMIT).map(async (rawLink) => {
+    const results = await Promise.allSettled(page.links.slice(0, childLimit).map(async (rawLink) => {
       const link = normalizeUrl(rawLink);
       return crawlQueue.add('crawl-link', {
         url: link,
@@ -112,7 +112,22 @@ const worker = new Worker('job-crawler', async (job) => {
   } else if (decision && decision.type === 'DONE') {
     console.log(`\x1b[32m[✅ Résultat sauvegardé]\x1b[0m ${page.url}`);
     try {
-      await writeResult({ url: currentPage?.url || page.url, score: lastScoring?.score, reasons: lastScoring?.reasons, source });
+      const j = currentPage?.job || {};
+      const enriched = {
+        url: currentPage?.url || page.url,
+        title: j.title || currentPage?.title,
+        organization: j.organization,
+        location: j.location,
+        description: j.description,
+        date_posted: j.date_posted,
+        valid_through: j.valid_through,
+        apply_url: j.apply_url,
+        email: Array.isArray(currentPage?.emails) && currentPage.emails.length ? currentPage.emails[0] : undefined,
+        score: lastScoring?.score,
+        reasons: lastScoring?.reasons,
+        source
+      };
+      await writeResult(enriched);
     } catch {}
   } else if (decision && decision.type === 'DECISION') {
     console.log(`\x1b[33m[⚠️ Décision IA: ${decision.decision}]\x1b[0m ${decision.reason || ''}`);
@@ -122,7 +137,7 @@ const worker = new Worker('job-crawler', async (job) => {
       console.log(`\x1b[36m[→ FOLLOW] targets=${targets.length} | page.links=${Array.isArray(page.links) ? page.links.length : 0}\x1b[0m`);
 
       // 1) Suivre les targets explicitement fournis par l'IA
-      for (const rawLink of targets.slice(0, CHILD_LIMIT)) {
+      for (const rawLink of targets.slice(0, childLimit)) {
         const link = normalizeUrl(rawLink);
         try {
           await crawlQueue.add('crawl-link', {
@@ -138,7 +153,7 @@ const worker = new Worker('job-crawler', async (job) => {
 
       // 2) Fallback: si l'IA n'a pas renvoyé de targets, utiliser les liens filtrés de la page
       if (enqueued === 0 && Array.isArray(page.links) && page.links.length && depth < maxDepth) {
-        for (const rawLink of page.links.slice(0, CHILD_LIMIT)) {
+        for (const rawLink of page.links.slice(0, childLimit)) {
           const link = normalizeUrl(rawLink);
           try {
             await crawlQueue.add('crawl-link', {

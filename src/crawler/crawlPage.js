@@ -38,16 +38,19 @@ export async function crawlPage(url) {
       text: signals.text,
       emails: signals.emails,
       hasForm: signals.hasForm,
-      links: signals.links
+      links: signals.links,
+      nextLink: signals.nextLink || null,
+      job: signals.job || null
     };
   } catch (err) {
     console.log(`Axios échoué pour ${url}, tentative Puppeteer...`);
   }
 
   /* =====================
-     2️⃣ Fallback Puppeteer
+     2️⃣ Fallback/Boost Puppeteer
+     - Utilisé si Axios a échoué OU si trop peu de liens découverts (page dynamique)
      ===================== */
-  if (!finalData) {
+  if (!finalData || (finalData && Array.isArray(finalData.links) && finalData.links.length < 10)) {
     try {
       finalData = await withPage(async (page) => {
         // Navigation avec retry simple pour "Execution context was destroyed"
@@ -68,6 +71,22 @@ export async function crawlPage(url) {
         };
         await nav();
 
+        // Auto-scroll pour l'infinite scroll / chargement lazy
+        async function autoScroll(maxSteps = 8){
+          for(let i=0;i<maxSteps;i++){
+            try{
+              await page.evaluate(() => new Promise(resolve => {
+                const distance = 1200; const delay = 200;
+                const { scrollTop, scrollHeight, clientHeight } = document.scrollingElement || document.documentElement;
+                window.scrollBy(0, distance);
+                setTimeout(resolve, delay);
+              }));
+              await page.waitForTimeout(300);
+            }catch{}
+          }
+        }
+        await autoScroll();
+
         const data = await page.evaluate(() => {
           const EMAIL_REGEX = /[A-Z0-9._%+-]+(?:\s?\[at\]\s?|\s?\(at\)\s?|@)[A-Z0-9.-]+\.[A-Z]{2,}/gi;
           const text = document.body.innerText || "";
@@ -76,13 +95,25 @@ export async function crawlPage(url) {
           let hasForm = false;
           document.querySelectorAll("form").forEach(f => { if (f.innerText.match(/bewerb|upload|cv|apply|senden|datei|lebenslauf/i)) hasForm = true; });
           const links = Array.from(document.querySelectorAll("a")).map(a => a.href).filter(h => h && h.startsWith(window.location.origin));
-          return { text, emails, hasForm, links };
+          // next link detection
+          let nextLink = null;
+          const relNext = document.querySelector('link[rel="next"]');
+          if (relNext && relNext.getAttribute('href')) nextLink = new URL(relNext.getAttribute('href'), window.location.href).href;
+          if (!nextLink) {
+            const NEXT_RX = /(weiter|nächste|next|more|load\s*more|vorwärts|older|page\s*\d+|»|›)/i;
+            const anchors = Array.from(document.querySelectorAll('a'));
+            for (const a of anchors){
+              const t = (a.textContent||'').trim();
+              if(NEXT_RX.test(t) && a.getAttribute('href')){ try{ nextLink = new URL(a.getAttribute('href'), window.location.href).href; break; }catch{} }
+            }
+          }
+          return { text, emails, hasForm, links, nextLink };
         });
         return data;
       });
     } catch (err) {
       console.error(`Erreur critique Puppeteer sur ${url}:`, err.message);
-      return null;
+      if (!finalData) return null; // si axios déjà dispo, garder au moins ça
     }
   }
 
@@ -98,7 +129,12 @@ export async function crawlPage(url) {
 
   if (finalData && finalData.links) {
     const noiseQuery = /(tx_bafzacookiebar|CookieWarning|closeCookieBar|cHash=|type=\d+)/i;
-    const cleanLinks = [...new Set(finalData.links.map(normalizeUrl))].filter(link => {
+    // Prioriser lien 'next' si présent
+    const prioritized = [];
+    if (finalData.nextLink) {
+      try { prioritized.push(normalizeUrl(finalData.nextLink)); } catch {}
+    }
+    const cleanLinks = [...new Set([...prioritized, ...finalData.links.map(normalizeUrl)])].filter(link => {
       if (!link || !link.startsWith("http") || link.includes("#")) return false;
       // Écarter liens évidents non pertinents
       const blacklist = /impressum|datenschutz|privacy|kontakt|contact|presse|login|newsletter|agb|sitemap|facebook|twitter|instagram|linkedin|\.pdf$/i;
@@ -109,7 +145,17 @@ export async function crawlPage(url) {
 
     if (cleanLinks.length > 0) {
       console.log(`🤖 IA : Validation de ${cleanLinks.length} liens...`);
-      finalData.links = await filterUrlsWithAI(cleanLinks, url); 
+      const aiSelected = await filterUrlsWithAI(cleanLinks, url);
+      // S'assurer que nextLink reste présent en tête
+      const nextNorm = finalData.nextLink ? normalizeUrl(finalData.nextLink) : null;
+      let merged = [...new Set([nextNorm, ...aiSelected].filter(Boolean))];
+      // Fallback sécure si l'IA écarte tout: garder des patterns de listing courants
+      if (merged.length === 0) {
+        const allowRx = /(aktuelle-ausbildungsplaetze|aktuelle-duale-studienplaetze|\/unternehmen\/.+\/stellen|\/suche\/?|\bjobs?\b)/i;
+        merged = cleanLinks.filter(l => allowRx.test(l)).slice(0, 50);
+        if (nextNorm) merged = [...new Set([nextNorm, ...merged])];
+      }
+      finalData.links = merged; 
     } else {
       finalData.links = [];
     }

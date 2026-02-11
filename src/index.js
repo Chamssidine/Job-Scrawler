@@ -168,9 +168,76 @@ app.get('/api/sites', async (req, res) => {
     }
 });
 
-// GET /api/jobs - Retourne les jobs en cours et la queue
+// GET /api/jobs
+// - Sans paramètres de recherche: retourne l'état de la file (comportement existant)
+// - Avec paramètres (ex: jobTitle, location): retourne les résultats filtrés depuis data/results.json
 app.get('/api/jobs', async (req, res) => {
     try {
+        const { jobTitle, title, location, host, source, emailOnly, minScore, page = '1', pageSize = '50' } = req.query;
+        const isSearch = [jobTitle, title, location, host, source, emailOnly, minScore].some(v => v !== undefined);
+
+        if (isSearch) {
+            const results = await readJsonFile(RESULTS_PATH, []);
+            const qTitle = (jobTitle ?? title ?? '').toString().trim();
+            const qLoc = (location ?? '').toString().trim();
+            const qHost = (host ?? '').toString().trim();
+            const qSource = (source ?? '').toString().trim();
+            const qEmailOnly = String(emailOnly ?? '').toLowerCase() === 'true';
+            const qMinScore = Number.isFinite(parseFloat(minScore)) ? parseFloat(minScore) : null;
+
+            const norm = (s) => (s ?? '').toString().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+            const hostOf = (u) => { try { return new URL(u).hostname; } catch { return ''; } };
+
+            let filtered = results.filter((item) => {
+                // Title/Name matching
+                if (qTitle) {
+                    const titleFields = [item.title, item.nom, item.name, item.organization, item.description];
+                    const hay = norm(titleFields.filter(Boolean).join(' \n '));
+                    if (!hay.includes(norm(qTitle))) return false;
+                }
+                // Location matching
+                if (qLoc) {
+                    const locHay = norm(item.location || '');
+                    if (!locHay.includes(norm(qLoc))) return false;
+                }
+                // Host filter
+                if (qHost) {
+                    if (hostOf(item.url) !== qHost) return false;
+                }
+                // Source filter (exact)
+                if (qSource) {
+                    if ((item.source || '') !== qSource) return false;
+                }
+                // Email only
+                if (qEmailOnly) {
+                    const e = String(item.email ?? '').trim().toLowerCase();
+                    if (!e || e === 'n/a' || e === 'na' || e === '—' || e === '-') return false;
+                }
+                // Min score
+                if (qMinScore !== null && qMinScore > 0) {
+                    if (typeof item.score !== 'number' || item.score < qMinScore) return false;
+                }
+                return true;
+            });
+
+            // Default sort: newest first
+            filtered.sort((a,b) => new Date(b.extracted_at || 0) - new Date(a.extracted_at || 0));
+
+            const p = Math.max(1, parseInt(page, 10) || 1);
+            const ps = Math.min(500, Math.max(1, parseInt(pageSize, 10) || 50));
+            const start = (p - 1) * ps;
+            const slice = filtered.slice(start, start + ps);
+
+            return res.json({
+                total: filtered.length,
+                page: p,
+                pageSize: ps,
+                count: slice.length,
+                results: slice
+            });
+        }
+
+        // Default: queue stats mode
         const active = await crawlQueue.getActiveCount();
         const waiting = await crawlQueue.getWaitingCount();
         const completed = await crawlQueue.getCompletedCount();
@@ -209,7 +276,7 @@ app.get('/api/jobs', async (req, res) => {
 
 // POST /api/scan - Lancer un nouveau scan et/ou sauvegarder une config (AVEC SANITIZATION)
 app.post('/api/scan', async (req, res) => {
-    const { url, name, schema, saveConfig } = req.body;
+    const { url, name, schema, saveConfig, maxDepth: reqMaxDepth, childLimit: reqChildLimit } = req.body;
 
     console.log(`[SCAN] received: name=${name || ''} url=${url || ''} saveConfig=${!!saveConfig}`);
 
@@ -265,12 +332,17 @@ app.post('/api/scan', async (req, res) => {
 
     try {
         const safeJobId = `scan-${sanitizedName.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`;
+        // Bounds
+        const safeMaxDepth = Math.min(6, Math.max(1, parseInt(reqMaxDepth ?? '3', 10) || 3));
+        const safeChildLimit = Math.min(200, Math.max(1, parseInt(reqChildLimit ?? (process.env.CHILD_LIMIT || '20'), 10) || 20));
+
         await crawlQueue.add('crawl-job', { 
             url: sanitizedUrl, 
             source: sanitizedName, 
             schema: sanitizedSchema || null,
-            maxDepth: 3,
+            maxDepth: safeMaxDepth,
             depth: 0,
+            childLimit: safeChildLimit,
         }, {
             jobId: safeJobId,
             attempts: 2,
