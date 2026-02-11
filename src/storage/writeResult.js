@@ -61,20 +61,31 @@ export async function writeResult(job) {
       data = [];
     }
 
-    // 3. Vérifier les doublons en se basant sur l'URL nettoyée
-    const exists = data.some(existingJob => existingJob && existingJob.url === sanitizedJob.url);
+    // 3. Upsert par URL (merge si existe déjà)
+    const idx = data.findIndex(existingJob => existingJob && existingJob.url === sanitizedJob.url);
 
-    if (!exists) {
+    if (idx === -1) {
       data.push({
         ...sanitizedJob,
-        extracted_at: new Date().toISOString() // Utiliser extracted_at comme standardisé
+        extracted_at: new Date().toISOString()
       });
-      
       await fs.writeFile(FILE_PATH, JSON.stringify(data, null, 2));
       console.log(`\x1b[32m%s\x1b[0m`, `✅ RÉSULTAT SAUVEGARDÉ : ${sanitizedJob.title || sanitizedJob.url}`);
     } else {
-      // Optionnel: loguer si l'offre existe déjà
-      // console.log(`\x1b[33m%s\x1b[0m`, `ℹ️ Résultat déjà existant : ${sanitizedJob.url}`);
+      const current = data[idx] || {};
+      const merged = { ...current };
+      for (const [k, v] of Object.entries(sanitizedJob)) {
+        if (k === 'extracted_at') continue;
+        if (v !== undefined && v !== null && v !== '') {
+          merged[k] = v;
+        }
+      }
+      // Conserver la date d'extraction originale, ajouter updated_at
+      merged.extracted_at = current.extracted_at || new Date().toISOString();
+      merged.updated_at = new Date().toISOString();
+      data[idx] = merged;
+      await fs.writeFile(FILE_PATH, JSON.stringify(data, null, 2));
+      console.log(`\x1b[36m%s\x1b[0m`, `🔄 RÉSULTAT MIS À JOUR : ${merged.title || merged.url}`);
     }
   } catch (error) {
     console.error("❌ Erreur critique dans writeResult:", error.message);
